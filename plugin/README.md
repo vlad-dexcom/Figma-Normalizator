@@ -26,7 +26,14 @@ designer can act on directly.
    - A pretty-printed JSON preview of the extracted IR.
    - A **Warnings** list, grouped by reason (see below), each entry showing
      its detail and Figma node id. Click **Select** on any entry to
-     re-select and scroll to that node on the canvas.
+     re-select and scroll to that node on the canvas. Click
+     **Collapse all** (next to the Warnings heading, only shown when there
+     are warnings) to hide individual entries while keeping each group's
+     title and count visible — useful on a screen with many
+     `unmapped-component` entries (e.g. one with few/no design-system
+     components), where the full list would otherwise crowd out the IR
+     preview. Click **Expand all** to bring the entries back; the toggle
+     persists across re-Extracts of the same panel session.
    - If the selection is too large for the extractor's node budget (see
      `src/extractor/budget.ts`), a visible banner explains extraction was
      stopped rather than silently truncated — reselect a smaller region.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groupWarningsByReason, labelForReason } from "../warnings.js";
+import { buildWarningsViewModel, groupWarningsByReason, labelForReason } from "../warnings.js";
 
 describe("labelForReason", () => {
   it("returns known human-readable labels for extractor-emitted reasons", () => {
@@ -46,5 +46,41 @@ describe("groupWarningsByReason", () => {
     ];
     const groups = groupWarningsByReason(entries);
     expect(groups[0]?.entries.map((e) => e.nodeId)).toEqual(["a", "b", "c"]);
+  });
+});
+
+describe("buildWarningsViewModel", () => {
+  const entries = [
+    { nodeId: "1", reason: "unbound-literal" },
+    { nodeId: "2", reason: "unmapped-component" },
+    { nodeId: "3", reason: "unmapped-component" },
+  ];
+
+  it("reports no warnings and hides the toggle for an empty entry list, regardless of collapsed state", () => {
+    expect(buildWarningsViewModel([], false)).toMatchObject({ hasWarnings: false, groups: [] });
+    expect(buildWarningsViewModel([], true)).toMatchObject({ hasWarnings: false, groups: [] });
+  });
+
+  it("shows entries and offers to collapse when not collapsed", () => {
+    const view = buildWarningsViewModel(entries, false);
+    expect(view.hasWarnings).toBe(true);
+    expect(view.entriesVisible).toBe(true);
+    expect(view.toggleLabel).toBe("Collapse all");
+  });
+
+  it("hides entries but keeps groups (with their counts) and offers to expand when collapsed", () => {
+    const view = buildWarningsViewModel(entries, true);
+    expect(view.hasWarnings).toBe(true);
+    expect(view.entriesVisible).toBe(false);
+    expect(view.toggleLabel).toBe("Expand all");
+    // Groups themselves (and their entry counts) are unaffected by the
+    // collapsed flag — only whether a caller should render each entry.
+    expect(view.groups).toHaveLength(2);
+    expect(view.groups[1]?.entries).toHaveLength(2);
+  });
+
+  it("groups pass through identically to groupWarningsByReason regardless of collapsed state", () => {
+    expect(buildWarningsViewModel(entries, false).groups).toEqual(groupWarningsByReason(entries));
+    expect(buildWarningsViewModel(entries, true).groups).toEqual(groupWarningsByReason(entries));
   });
 });

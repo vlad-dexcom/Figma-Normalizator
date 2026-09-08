@@ -128,6 +128,27 @@
         color: var(--muted);
         margin: 0 0 6px;
       }
+      .section-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .section-header h2 {
+        margin: 0 0 6px;
+      }
+      .link-button {
+        font: inherit;
+        border: none;
+        background: none;
+        color: #18a0fb;
+        padding: 0;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+      .link-button:hover {
+        text-decoration: none;
+      }
       #banner {
         display: none;
         background: var(--banner-bg);
@@ -214,7 +235,12 @@
     <main>
       <div id="banner"></div>
       <section>
-        <h2>Warnings</h2>
+        <div class="section-header">
+          <h2>Warnings</h2>
+          <button id="warnings-toggle" class="link-button" type="button" hidden>
+            Collapse all
+          </button>
+        </div>
         <div id="warnings"><p id="empty-warnings">No warnings yet — click Extract.</p></div>
       </section>
       <section>

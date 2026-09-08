@@ -7,7 +7,7 @@ import type { ExtractionResult } from "./extractor/index.js";
 import { canonicalStringify } from "./extractor/canonical.js";
 import type { UnresolvedEntry } from "@figma-normalizator/schema";
 import { buildExportFilename } from "./ui/filename.js";
-import { groupWarningsByReason } from "./ui/warnings.js";
+import { buildWarningsViewModel } from "./ui/warnings.js";
 import { copyToClipboard, type ClipboardDeps } from "./ui/clipboard.js";
 import type { ExportSource, PluginToUIMessage, UIToPluginMessage } from "./messages.js";
 
@@ -24,6 +24,7 @@ const copyButton = byId<HTMLButtonElement>("copy-button");
 const copyStatusEl = byId<HTMLSpanElement>("copy-status");
 const bannerEl = byId<HTMLDivElement>("banner");
 const warningsEl = byId<HTMLDivElement>("warnings");
+const warningsToggleButton = byId<HTMLButtonElement>("warnings-toggle");
 const irPreviewEl = byId<HTMLPreElement>("ir-preview");
 
 let copyStatusResetTimer: number | undefined;
@@ -31,6 +32,16 @@ let copyStatusResetTimer: number | undefined;
 /** State needed across messages: the latest extraction result plus enough provenance to name an export. */
 let lastResult: ExtractionResult | null = null;
 let lastSource: ExportSource | null = null;
+
+/**
+ * "Collapse all" toggle for the warnings panel: hides each group's
+ * individual entries (titles/counts stay visible) so a screen with many
+ * `unmapped-component` warnings — e.g. one with few/no design-system
+ * components — doesn't crowd out the IR preview. Manual, off by default,
+ * and persists across re-Extracts within the same panel session (reset
+ * only if the panel itself is reopened) — matches `lastResult`'s lifetime.
+ */
+let warningsCollapsed = false;
 
 function postToPlugin(message: UIToPluginMessage): void {
   parent.postMessage({ pluginMessage: message }, "*");
@@ -94,7 +105,12 @@ function renderWarningEntry(entry: UnresolvedEntry): HTMLDivElement {
 function renderWarnings(unresolved: readonly UnresolvedEntry[]): void {
   warningsEl.innerHTML = "";
 
-  if (unresolved.length === 0) {
+  const view = buildWarningsViewModel(unresolved, warningsCollapsed);
+
+  warningsToggleButton.hidden = !view.hasWarnings;
+  warningsToggleButton.textContent = view.toggleLabel;
+
+  if (!view.hasWarnings) {
     const empty = document.createElement("p");
     empty.id = "empty-warnings";
     empty.textContent = "No warnings — this selection is fully resolved.";
@@ -102,7 +118,7 @@ function renderWarnings(unresolved: readonly UnresolvedEntry[]): void {
     return;
   }
 
-  for (const group of groupWarningsByReason(unresolved)) {
+  for (const group of view.groups) {
     const groupEl = document.createElement("div");
     groupEl.className = "warning-group";
 
@@ -111,8 +127,10 @@ function renderWarnings(unresolved: readonly UnresolvedEntry[]): void {
     title.textContent = `${group.label} (${group.entries.length})`;
     groupEl.appendChild(title);
 
-    for (const entry of group.entries) {
-      groupEl.appendChild(renderWarningEntry(entry));
+    if (view.entriesVisible) {
+      for (const entry of group.entries) {
+        groupEl.appendChild(renderWarningEntry(entry));
+      }
     }
 
     warningsEl.appendChild(groupEl);
@@ -153,6 +171,11 @@ function handlePluginMessage(message: PluginToUIMessage): void {
 extractButton.addEventListener("click", () => {
   clearBanner();
   postToPlugin({ type: "extract" });
+});
+
+warningsToggleButton.addEventListener("click", () => {
+  warningsCollapsed = !warningsCollapsed;
+  renderWarnings(lastResult?.unresolved ?? []);
 });
 
 /**

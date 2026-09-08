@@ -77,3 +77,36 @@ export function groupWarningsByReason(entries: readonly UnresolvedEntry[]): Warn
     entries: byReason.get(reason) ?? [],
   }));
 }
+
+/**
+ * Render-ready view of the warnings panel for a given `collapsed` toggle
+ * state. Kept as a pure function (rather than deciding this inline in
+ * `ui.ts`) so the "collapse all" behavior — hide individual entries but
+ * keep each group's title + count visible, so a designer still sees *that*
+ * there are warnings without the per-entry list crowding the panel (e.g.
+ * many `unmapped-component` entries on a screen with few/no design-system
+ * components) — is testable headlessly, matching this module's existing
+ * DOM-free convention.
+ */
+export interface WarningsViewModel {
+  /** Whether the "Collapse all"/"Expand all" toggle button should be shown at all (no point when there are no warnings). */
+  hasWarnings: boolean;
+  /** Label for the toggle button, reflecting the *next* state a click would produce. */
+  toggleLabel: string;
+  /** Whether each group's individual entries should currently be rendered (false while collapsed — group titles/counts still render regardless). */
+  entriesVisible: boolean;
+  groups: WarningGroup[];
+}
+
+export function buildWarningsViewModel(
+  entries: readonly UnresolvedEntry[],
+  collapsed: boolean,
+): WarningsViewModel {
+  const groups = groupWarningsByReason(entries);
+  return {
+    hasWarnings: groups.length > 0,
+    toggleLabel: collapsed ? "Expand all" : "Collapse all",
+    entriesVisible: !collapsed,
+    groups,
+  };
+}
