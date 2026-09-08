@@ -1,4 +1,7 @@
-// Placeholder entry point for captured Figma node fixtures and expected IR
-// snapshots. Real fixtures will be added alongside the IR extractor in a
-// later stage. Nothing is exported yet.
-export {};
+// Entry point for the captured Figma node fixture corpus and expected IR
+// snapshots. See fixtures/README.md for the corpus overview and the
+// snapshot-update workflow.
+export type { FixtureScenario } from "./scenario.js";
+export { expectedIrPath } from "./scenario.js";
+export { runScenario } from "./runScenario.js";
+export { scenarios } from "./corpus/index.js";

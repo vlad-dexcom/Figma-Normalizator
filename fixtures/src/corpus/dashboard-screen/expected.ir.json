@@ -1,0 +1,322 @@
+{
+  "nodes": [
+    {
+      "kind": "layout",
+      "direction": "column",
+      "gap": { "token": null, "value": 20 },
+      "padding": { "all": { "token": null, "value": 24 } },
+      "mainAxisAlign": "start",
+      "crossAxisAlign": "start",
+      "sizing": { "width": "fixed", "height": "hug" },
+      "background": null,
+      "cornerRadius": null,
+      "children": [
+        {
+          "kind": "layout",
+          "direction": "row",
+          "gap": { "token": null, "value": 0 },
+          "padding": { "all": { "token": null, "value": 0 } },
+          "mainAxisAlign": "spaceBetween",
+          "crossAxisAlign": "center",
+          "sizing": { "width": "hug", "height": "hug" },
+          "background": null,
+          "cornerRadius": null,
+          "children": [
+            {
+              "kind": "text",
+              "text": [
+                { "text": "Good morning, ", "typography": { "token": null } },
+                { "text": "Alex", "typography": { "token": null } }
+              ],
+              "typography": null,
+              "color": null,
+              "source": {
+                "nodeId": "test:1",
+                "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+                "version": "1",
+                "path": ["Screen", "HeaderRow", "HeaderTitle"]
+              }
+            },
+            {
+              "kind": "asset",
+              "assetType": "icon",
+              "exportRef": "icon_settings",
+              "width": 20,
+              "height": 20,
+              "source": {
+                "nodeId": "test:3",
+                "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+                "version": "1",
+                "path": ["Screen", "HeaderRow", "Icon/Settings"]
+              }
+            }
+          ],
+          "source": {
+            "nodeId": "test:4",
+            "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+            "version": "1",
+            "path": ["Screen", "HeaderRow"]
+          }
+        },
+        {
+          "kind": "layout",
+          "direction": "column",
+          "gap": { "token": null, "value": 8 },
+          "padding": { "all": { "token": null, "value": 0 } },
+          "mainAxisAlign": "start",
+          "crossAxisAlign": "start",
+          "sizing": { "width": "fixed", "height": "hug" },
+          "background": null,
+          "cornerRadius": null,
+          "children": [
+            {
+              "kind": "text",
+              "text": "Reminders",
+              "typography": { "token": null },
+              "color": null,
+              "source": {
+                "nodeId": "test:5",
+                "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+                "version": "1",
+                "path": ["Screen", "RemindersList", "Reminders"]
+              }
+            },
+            {
+              "kind": "list",
+              "itemTemplate": {
+                "kind": "layout",
+                "direction": "row",
+                "gap": { "token": null, "value": 8 },
+                "padding": { "all": { "token": null, "value": 0 } },
+                "mainAxisAlign": "start",
+                "crossAxisAlign": "center",
+                "sizing": { "width": "hug", "height": "hug" },
+                "background": null,
+                "cornerRadius": null,
+                "children": [
+                  {
+                    "kind": "asset",
+                    "assetType": "icon",
+                    "exportRef": "icon_alarm",
+                    "width": 20,
+                    "height": 20,
+                    "source": {
+                      "nodeId": "test:7",
+                      "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+                      "version": "1",
+                      "path": ["Screen", "RemindersList", "ReminderRow", "Icon/Alarm"]
+                    }
+                  },
+                  {
+                    "kind": "text",
+                    "text": "Check glucose at 8:00 AM",
+                    "typography": { "token": null },
+                    "color": null,
+                    "source": {
+                      "nodeId": "test:8",
+                      "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+                      "version": "1",
+                      "path": ["Screen", "RemindersList", "ReminderRow", "Check glucose at 8:00 AM"]
+                    }
+                  }
+                ],
+                "source": {
+                  "nodeId": "test:9",
+                  "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+                  "version": "1",
+                  "path": ["Screen", "RemindersList", "ReminderRow"]
+                }
+              },
+              "itemCount": 4,
+              "source": {
+                "nodeId": "test:9",
+                "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+                "version": "1",
+                "path": ["Screen", "RemindersList", "ReminderRow"]
+              }
+            }
+          ],
+          "source": {
+            "nodeId": "test:22",
+            "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+            "version": "1",
+            "path": ["Screen", "RemindersList"]
+          }
+        },
+        {
+          "kind": "layout",
+          "direction": "row",
+          "gap": { "token": null, "value": 0 },
+          "padding": { "all": { "token": null, "value": 0 } },
+          "mainAxisAlign": "start",
+          "crossAxisAlign": "start",
+          "sizing": { "width": "hug", "height": "hug" },
+          "background": null,
+          "cornerRadius": null,
+          "children": [
+            {
+              "kind": "instance",
+              "component": "AppButton",
+              "figmaComponentSetName": "Buttons",
+              "figmaComponentKey": "buttons-elevated-action-large",
+              "props": {
+                "type": { "variant": null, "from": "Style=Elevated Action" },
+                "size": { "variant": "Large", "from": "Size=Large" },
+                "text": { "value": "Snooze all" }
+              },
+              "slots": {},
+              "layout": {},
+              "unresolved": [
+                {
+                  "nodeId": "test:25",
+                  "reason": "unmapped-variant",
+                  "detail": "Figma has an 'Elevated Action' Style variant. AppButtonType has no PascalCase-normalized equivalent ('ElevatedAction' does not exist in Compose). Needs design system team follow-up before this variant value can be code-generated."
+                }
+              ],
+              "source": {
+                "nodeId": "test:25",
+                "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+                "version": "1",
+                "path": ["Screen", "FooterRow", "Buttons"]
+              }
+            }
+          ],
+          "source": {
+            "nodeId": "test:26",
+            "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+            "version": "1",
+            "path": ["Screen", "FooterRow"]
+          }
+        }
+      ],
+      "source": {
+        "nodeId": "test:27",
+        "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+        "version": "1",
+        "path": ["Screen"]
+      }
+    }
+  ],
+  "unresolved": [
+    {
+      "nodeId": "test:27",
+      "reason": "unbound-literal",
+      "detail": "Field \"itemSpacing\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:27",
+      "reason": "unbound-literal",
+      "detail": "Field \"paddingLeft\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:4",
+      "reason": "unbound-literal",
+      "detail": "Field \"itemSpacing\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:4",
+      "reason": "unbound-literal",
+      "detail": "Field \"paddingLeft\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:1",
+      "reason": "unbound-literal",
+      "detail": "Text style has no bound typography variable; using raw literal font."
+    },
+    {
+      "nodeId": "test:1",
+      "reason": "unbound-literal",
+      "detail": "Text style has no bound typography variable; using raw literal font."
+    },
+    {
+      "nodeId": "test:22",
+      "reason": "unbound-literal",
+      "detail": "Field \"itemSpacing\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:22",
+      "reason": "unbound-literal",
+      "detail": "Field \"paddingLeft\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:5",
+      "reason": "unbound-literal",
+      "detail": "Text style has no bound typography variable; using raw literal font."
+    },
+    {
+      "nodeId": "test:9",
+      "reason": "unbound-literal",
+      "detail": "Field \"itemSpacing\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:9",
+      "reason": "unbound-literal",
+      "detail": "Field \"paddingLeft\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:8",
+      "reason": "unbound-literal",
+      "detail": "Text style has no bound typography variable; using raw literal font."
+    },
+    {
+      "nodeId": "test:13",
+      "reason": "unbound-literal",
+      "detail": "Field \"itemSpacing\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:13",
+      "reason": "unbound-literal",
+      "detail": "Field \"paddingLeft\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:12",
+      "reason": "unbound-literal",
+      "detail": "Text style has no bound typography variable; using raw literal font."
+    },
+    {
+      "nodeId": "test:17",
+      "reason": "unbound-literal",
+      "detail": "Field \"itemSpacing\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:17",
+      "reason": "unbound-literal",
+      "detail": "Field \"paddingLeft\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:16",
+      "reason": "unbound-literal",
+      "detail": "Text style has no bound typography variable; using raw literal font."
+    },
+    {
+      "nodeId": "test:21",
+      "reason": "unbound-literal",
+      "detail": "Field \"itemSpacing\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:21",
+      "reason": "unbound-literal",
+      "detail": "Field \"paddingLeft\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:20",
+      "reason": "unbound-literal",
+      "detail": "Text style has no bound typography variable; using raw literal font."
+    },
+    {
+      "nodeId": "test:26",
+      "reason": "unbound-literal",
+      "detail": "Field \"itemSpacing\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:26",
+      "reason": "unbound-literal",
+      "detail": "Field \"paddingLeft\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:25",
+      "reason": "unmapped-variant",
+      "detail": "Figma has an 'Elevated Action' Style variant. AppButtonType has no PascalCase-normalized equivalent ('ElevatedAction' does not exist in Compose). Needs design system team follow-up before this variant value can be code-generated."
+    }
+  ]
+}
