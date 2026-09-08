@@ -1,0 +1,12 @@
+{
+  "name": "@figma-normalizator/fixtures",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Captured real-screen node data and expected IR snapshots used in tests",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}
