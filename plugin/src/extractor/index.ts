@@ -26,10 +26,13 @@ import { resolveFillColor, resolveTokenValue } from "./tokens.js";
 import { buildProvenance, withDescendant, type ProvenanceContext } from "./provenance.js";
 import { collapseLists, type OrderedChild } from "./list.js";
 import { groupOverlayChildren } from "./overlay.js";
+import { computeContentVersion, withVersion } from "./versioning.js";
 import type { ExtractionSource, FigmaAPI, FigmaNode } from "./types.js";
 
 export { DEFAULT_NODE_BUDGET, NodeBudgetExceededError } from "./budget.js";
 export type { FigmaAPI, FigmaNode, ExtractionSource } from "./types.js";
+export { canonicalize, canonicalStringify } from "./canonical.js";
+export { computeContentVersion } from "./versioning.js";
 
 export interface ExtractionResult {
   nodes: IRNode[];
@@ -41,7 +44,19 @@ export interface ExtractionResult {
    * schema has no dedicated per-node channel for.
    */
   unresolved: UnresolvedEntry[];
+  /**
+   * The `Provenance.version` shared by every node in `nodes` (either the
+   * caller's explicit `ExtractionSource.version` override, or — the normal
+   * production path — a content-hash derived from this exact IR; see
+   * `./versioning.ts`). Exposed here too since callers (e.g. `code.ts`)
+   * also need it to name the exported file/`ExportSource.version` without
+   * digging into `nodes[0].source`.
+   */
+  version: string;
 }
+
+/** Placeholder used while building the tree, before the real content-hash version is known (see the end of `extractSelection`). */
+const PENDING_VERSION = "";
 
 interface NodeResult {
   ir: IRNode | null;
@@ -247,7 +262,7 @@ export async function extractSelection(
   const budget = new NodeBudget(nodeBudget);
   const ctx: ProvenanceContext = {
     fileKey: source.fileKey,
-    version: source.version,
+    version: source.version ?? PENDING_VERSION,
     ancestorPath: [],
   };
 
@@ -260,5 +275,14 @@ export async function extractSelection(
     if (result.ir) nodes.push(result.ir);
   }
 
-  return { nodes, unresolved };
+  // Explicit override (tests, fixtures): use it verbatim, no hashing.
+  if (source.version !== undefined) {
+    return { nodes, unresolved, version: source.version };
+  }
+
+  // Production path: derive the version from the IR we just built, then
+  // stamp every Provenance.version in the tree with it (see
+  // versioning.ts for why a content hash rather than a literal).
+  const version = computeContentVersion(nodes);
+  return { nodes: withVersion(nodes, version), unresolved, version };
 }

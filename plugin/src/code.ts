@@ -34,8 +34,6 @@ export interface ExtractFigmaAPI {
   viewport?: { scrollAndZoomIntoView(nodes: readonly FigmaNode[]): void };
 }
 
-const IR_VERSION = "1";
-
 function describeSelection(selection: readonly FigmaNode[]): SelectionSummary {
   const node = selection[0];
   return {
@@ -74,12 +72,15 @@ async function handleExtract(api: ExtractFigmaAPI): Promise<void> {
     // file's own API surface small); `extractSelection` wants the narrower
     // shape it actually calls. Real Figma's `variables` API is a structural
     // superset of what we need here.
+    // No `version` is passed here: extractSelection derives a deterministic
+    // content-hash version from the extracted IR itself (see
+    // extractor/versioning.ts) rather than us inventing one up front.
     const result: ExtractionResult = await extractSelection(
       {
         variables: api.variables as unknown as Parameters<typeof extractSelection>[0]["variables"],
       },
       selection,
-      { fileKey: api.fileKey ?? "", version: IR_VERSION },
+      { fileKey: api.fileKey ?? "" },
     );
 
     api.ui.postMessage({
@@ -88,7 +89,7 @@ async function handleExtract(api: ExtractFigmaAPI): Promise<void> {
       source: {
         fileKey: api.fileKey ?? "",
         nodeId: selection[0]?.id ?? "",
-        version: IR_VERSION,
+        version: result.version,
       },
     });
   } catch (error) {

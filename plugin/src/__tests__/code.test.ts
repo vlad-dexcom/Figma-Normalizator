@@ -83,10 +83,14 @@ describe("handleUIMessage: extract", () => {
       .calls[0] as [{ type: string; ir: { nodes: unknown[] }; source: Record<string, string> }];
     expect(message.type).toBe("ir-result");
     expect(message.ir.nodes).toHaveLength(1);
+    // `version` is a content-hash derived from the extracted IR (see
+    // extractor/versioning.ts), not a literal — assert its shape/scheme
+    // rather than a fixed value.
+    expect(message.source.version).toMatch(/^c1-[0-9a-f]{16}$/);
     expect(message.source).toEqual({
       fileKey: "file-abc",
       nodeId: selectedText.id,
-      version: "1",
+      version: message.source.version,
     });
   });
 

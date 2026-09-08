@@ -10,10 +10,11 @@ designer can act on directly.
   (`plugin-extractor`) for details on layout/token/instance/list/overlay
   resolution and the node budget.
 - **Panel UI** (`src/ui.ts`/`src/ui.html`, `src/code.ts`): implemented in
-  this task (`plugin-validator-ui`). See "Using the panel" below.
+  the `plugin-validator-ui` task. See "Using the panel" below.
 - **Formal versioned export** (clipboard support, byte-identical repeat
-  exports keyed by file key + node id + version): a separate, later task
-  (`ir-export`), building on the simple file-download export here.
+  exports keyed by file key + node id + version): implemented in this task
+  (`ir-export`). See "Using the panel", "Export versioning: what `version`
+  means", and "Determinism guarantee" below.
 
 ## Using the panel
 
@@ -31,11 +32,115 @@ designer can act on directly.
      stopped rather than silently truncated — reselect a smaller region.
 4. Click **Export** to download the extracted IR as
    `{fileKey}_{nodeId}_{version}.ir.json` (a plain browser file download —
-   see `src/ui/filename.ts`). This is intentionally minimal; the full
-   versioned-artifact export mechanics are the separate `ir-export` task.
+   see `src/ui/filename.ts`), or click **Copy to clipboard** to copy the
+   same content instead. Both serialize through the same canonical
+   (key-order-sorted) JSON step — see "Determinism guarantee" below — so
+   the file and the clipboard contents are always identical for the same
+   extraction, and re-exporting an unchanged selection produces
+   byte-identical output either way.
 
 Selecting a different layer on the canvas at any time updates the header
 and re-enables **Extract** for the new selection.
+
+## Export versioning: what `version` means
+
+`Provenance.version` (and the `{version}` segment of the export filename)
+is **not** a Figma file/revision version — the Plugin API exposes no
+per-node version/revision counter to read. The options actually available,
+and why none of them fit directly:
+
+- `node.id` — stable across edits, but for exactly that reason it does
+  **not** change when the node's content changes, so it can't answer "did
+  this change since I last exported it?".
+- File-level version history (`figma.saveVersionHistoryAsync`, the file's
+  version list) — a _file_-scoped concept, not readable synchronously for
+  an arbitrary node, and would tie a single exported node's version to
+  unrelated edits elsewhere in the same file.
+
+**What we ship instead:** `version` is a deterministic content hash
+(FNV-1a, 64-bit, formatted as `c1-<16 hex chars>`) computed from the
+extracted IR itself, after canonicalizing it (see "Determinism guarantee"
+below) — see `src/extractor/versioning.ts`. In practice:
+
+- The same selection, extracted twice with no underlying Figma change,
+  gets the same `version` (and therefore the same filename and byte-for-byte
+  identical file/clipboard content).
+- Any change to a field the extractor actually captures (layout, resolved
+  tokens, text, instance props, children, ...) changes the hash.
+- A Figma-side edit that does **not** touch anything the IR captures (e.g.
+  renaming an unrelated internal layer, or changing geometry/data the
+  schema intentionally omits) will **not** change `version` — this is a
+  deliberate consequence of "version tracks extracted content, not raw
+  Figma state", not a bug, but it is a real limitation worth knowing:
+  `version` answers "did the exported IR change", not "did the Figma node
+  change at all".
+- This is a plain, non-cryptographic hash chosen for determinism and zero
+  runtime dependencies (`crypto.subtle` is async and its plugin-sandbox
+  availability isn't guaranteed), not for collision-resistance against
+  adversarial input. Hash collisions are astronomically unlikely for this
+  use case (detecting accidental content drift between two exports, not
+  defending against someone deliberately engineering a collision), but they
+  are not cryptographically impossible.
+
+Tests may still pass an explicit literal version (`ExtractionSource.version`)
+to `extractSelection` when a fixed, human-readable value is more useful for
+a fixture/snapshot — see `extractor/types.ts`. Production code (`code.ts`)
+never does; it always uses the computed content hash.
+
+**This is a real design decision made under real Plugin API constraints,
+not an incidental implementation detail — flagged here explicitly for
+review**, since there's no perfect answer available.
+
+## Determinism guarantee
+
+**Exporting the same, unchanged selection twice MUST produce byte-identical
+output** (not just deep-equal — the literal file bytes / clipboard string
+must match). Two things make this hold:
+
+1. Every extractor function already builds its result objects with a
+   fixed, hand-written property order, so a single code path is already
+   deterministic key-order-wise for identical input.
+2. As defense-in-depth on top of that (and to make it explicit and tested,
+   not incidental), both the file download and the clipboard copy in
+   `ui.ts` serialize through `canonicalStringify` (`src/extractor/canonical.ts`),
+   which recursively sorts every object's keys (array order is untouched —
+   array order is meaningful IR content) before `JSON.stringify`-ing. Two
+   structurally-identical IR trees built via different code paths would
+   still serialize identically through this step even if their construction
+   order differed.
+
+`src/extractor/__tests__/determinism.test.ts` is the primary test for this
+guarantee: it builds the same mock Figma tree twice (independently, with a
+`resetAutoIds()` reset in between so even node-id allocation is identical)
+and asserts `JSON.stringify(result1) === JSON.stringify(result2)` —
+byte-for-byte string equality, not `toEqual` — plus the same check through
+`canonicalStringify` and matching content-hash `version`s.
+
+## Clipboard export
+
+Figma's plugin UI panel is a same-origin sandboxed iframe. `src/ui/clipboard.ts`
+implements `copyToClipboard`, which:
+
+1. Tries `navigator.clipboard.writeText` first (the modern Clipboard API) —
+   this generally works from the panel iframe because the copy is
+   synchronously triggered by a real user gesture (a click), which is
+   exactly the case Clipboard API permission checks are designed to allow.
+   It is not, however, guaranteed on every Figma desktop/browser/OS
+   combination the plugin might run on (older Chromium/Electron builds, a
+   host that hasn't granted the iframe `clipboard-write`, etc).
+2. Falls back to the older, far more broadly-supported
+   `document.execCommand("copy")` (via a hidden, focused, selected
+   `<textarea>`) if the modern API is unavailable or rejects.
+3. If both fail, returns a descriptive error — `ui.ts` shows this visibly
+   as inline status text next to the button (auto-clearing after a few
+   seconds), the same "never fail silently" principle the extraction
+   budget-exceeded banner already follows. It never throws or drops the
+   failure.
+
+`copyToClipboard` takes its browser dependencies (`writeText`/`fallbackCopy`)
+as arguments rather than touching `navigator`/`document` directly, so it's
+fully unit-testable without a DOM — see `src/ui/__tests__/clipboard.test.ts`.
+`ui.ts` wires the real browser APIs via `buildClipboardDeps()`.
 
 ### Warning reasons
 
@@ -78,7 +183,7 @@ manifest.json          # Figma plugin manifest
 src/code.ts              # sandboxed plugin-API entry point (no DOM access)
 src/ui.ts                 # UI iframe entry point (DOM, no Figma API access)
 src/ui.html                 # panel markup; build inlines the bundled ui.ts into it
-src/ui/                       # pure, tested UI logic (warning grouping, export filename)
+src/ui/                       # pure, tested UI logic (warning grouping, export filename, clipboard)
 src/messages.ts                # shared code.ts <-> ui.ts message protocol
 src/extractor/                   # IR extraction (see plugin-extractor task)
 src/test/mockFigma.ts              # createMockFigma() helper for headless tests
