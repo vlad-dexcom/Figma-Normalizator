@@ -1,0 +1,111 @@
+{
+  "nodes": [
+    {
+      "kind": "layout",
+      "direction": "column",
+      "gap": { "token": null, "value": 16 },
+      "padding": { "all": { "token": null, "value": 0 } },
+      "mainAxisAlign": "start",
+      "crossAxisAlign": "start",
+      "sizing": { "width": "fixed", "height": "hug" },
+      "background": null,
+      "cornerRadius": null,
+      "children": [
+        {
+          "kind": "text",
+          "text": "Quick actions",
+          "typography": { "token": null },
+          "color": null,
+          "source": {
+            "nodeId": "test:1",
+            "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+            "version": "1",
+            "path": ["Screen", "Quick actions"]
+          }
+        },
+        {
+          "kind": "layout",
+          "direction": "row",
+          "gap": { "token": null, "value": 8 },
+          "padding": { "all": { "token": null, "value": 0 } },
+          "mainAxisAlign": "start",
+          "crossAxisAlign": "start",
+          "sizing": { "width": "hug", "height": "hug" },
+          "background": null,
+          "cornerRadius": null,
+          "children": [
+            {
+              "kind": "list",
+              "itemTemplate": {
+                "kind": "instance",
+                "component": "AppButton",
+                "figmaComponentSetName": "Buttons",
+                "figmaComponentKey": "buttons-secondary-large",
+                "props": {
+                  "type": { "variant": "Secondary", "from": "Style=Secondary" },
+                  "size": { "variant": "Large", "from": "Size=Large" },
+                  "text": { "value": "Log glucose" }
+                },
+                "slots": {},
+                "layout": {},
+                "unresolved": [],
+                "source": {
+                  "nodeId": "test:4",
+                  "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+                  "version": "1",
+                  "path": ["Screen", "QuickActions", "Buttons"]
+                }
+              },
+              "itemCount": 4,
+              "source": {
+                "nodeId": "test:4",
+                "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+                "version": "1",
+                "path": ["Screen", "QuickActions", "Buttons"]
+              }
+            }
+          ],
+          "source": {
+            "nodeId": "test:14",
+            "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+            "version": "1",
+            "path": ["Screen", "QuickActions"]
+          }
+        }
+      ],
+      "source": {
+        "nodeId": "test:15",
+        "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+        "version": "1",
+        "path": ["Screen"]
+      }
+    }
+  ],
+  "unresolved": [
+    {
+      "nodeId": "test:15",
+      "reason": "unbound-literal",
+      "detail": "Field \"itemSpacing\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:15",
+      "reason": "unbound-literal",
+      "detail": "Field \"paddingLeft\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:1",
+      "reason": "unbound-literal",
+      "detail": "Text style has no bound typography variable; using raw literal font."
+    },
+    {
+      "nodeId": "test:14",
+      "reason": "unbound-literal",
+      "detail": "Field \"itemSpacing\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:14",
+      "reason": "unbound-literal",
+      "detail": "Field \"paddingLeft\" has no bound variable; using raw literal value."
+    }
+  ]
+}

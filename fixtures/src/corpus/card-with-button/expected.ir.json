@@ -1,0 +1,167 @@
+{
+  "nodes": [
+    {
+      "kind": "layout",
+      "direction": "column",
+      "gap": { "token": null, "value": 0 },
+      "padding": { "all": { "token": "spacing/lg", "value": 20 } },
+      "mainAxisAlign": "start",
+      "crossAxisAlign": "start",
+      "sizing": { "width": "fixed", "height": "hug" },
+      "background": null,
+      "cornerRadius": null,
+      "children": [
+        {
+          "kind": "layout",
+          "direction": "column",
+          "gap": { "token": "spacing/md", "value": 12 },
+          "padding": { "all": { "token": "spacing/lg", "value": 20 } },
+          "mainAxisAlign": "start",
+          "crossAxisAlign": "start",
+          "sizing": { "width": "fixed", "height": "hug" },
+          "background": {
+            "token": "color/surface/canvas/primary",
+            "value": "#FFFFFF",
+            "modes": { "light": "#FFFFFF", "dark": "#000000" }
+          },
+          "cornerRadius": { "token": null, "value": 12 },
+          "children": [
+            {
+              "kind": "text",
+              "text": "Sensor status",
+              "typography": { "token": "typography/title/medium" },
+              "color": { "token": null, "value": "#1A1A1A" },
+              "source": {
+                "nodeId": "test:1",
+                "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+                "version": "1",
+                "path": ["Screen", "Card", "Sensor status"]
+              }
+            },
+            {
+              "kind": "text",
+              "text": [
+                {
+                  "text": "Your sensor expires in ",
+                  "typography": { "token": null },
+                  "color": { "token": null, "value": "#666666" }
+                },
+                {
+                  "text": "2 days",
+                  "typography": { "token": null },
+                  "color": { "token": null, "value": "#1A1A1A" }
+                }
+              ],
+              "typography": null,
+              "color": null,
+              "source": {
+                "nodeId": "test:2",
+                "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+                "version": "1",
+                "path": ["Screen", "Card", "Description"]
+              }
+            },
+            {
+              "kind": "layout",
+              "direction": "row",
+              "gap": { "token": null, "value": 8 },
+              "padding": { "all": { "token": null, "value": 0 } },
+              "mainAxisAlign": "start",
+              "crossAxisAlign": "start",
+              "sizing": { "width": "hug", "height": "hug" },
+              "background": null,
+              "cornerRadius": null,
+              "children": [
+                {
+                  "kind": "instance",
+                  "component": "AppButton",
+                  "figmaComponentSetName": "Buttons",
+                  "figmaComponentKey": "buttons-primary-large",
+                  "props": {
+                    "type": { "variant": "Primary", "from": "Style=Primary" },
+                    "size": { "variant": "Large", "from": "Size=Large" },
+                    "text": { "value": "Replace now" }
+                  },
+                  "slots": {},
+                  "layout": { "sizing": { "width": "fill" } },
+                  "unresolved": [],
+                  "source": {
+                    "nodeId": "test:5",
+                    "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+                    "version": "1",
+                    "path": ["Screen", "Card", "ButtonRow", "Buttons"]
+                  }
+                }
+              ],
+              "source": {
+                "nodeId": "test:6",
+                "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+                "version": "1",
+                "path": ["Screen", "Card", "ButtonRow"]
+              }
+            }
+          ],
+          "source": {
+            "nodeId": "test:7",
+            "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+            "version": "1",
+            "path": ["Screen", "Card"]
+          }
+        }
+      ],
+      "source": {
+        "nodeId": "test:8",
+        "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+        "version": "1",
+        "path": ["Screen"]
+      }
+    }
+  ],
+  "unresolved": [
+    {
+      "nodeId": "test:8",
+      "reason": "unbound-literal",
+      "detail": "Field \"itemSpacing\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:7",
+      "reason": "unbound-literal",
+      "detail": "Field \"cornerRadius\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:1",
+      "reason": "unbound-literal",
+      "detail": "Field \"fills\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:2",
+      "reason": "unbound-literal",
+      "detail": "Text style has no bound typography variable; using raw literal font."
+    },
+    {
+      "nodeId": "test:2",
+      "reason": "unbound-literal",
+      "detail": "Field \"fills\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:2",
+      "reason": "unbound-literal",
+      "detail": "Text style has no bound typography variable; using raw literal font."
+    },
+    {
+      "nodeId": "test:2",
+      "reason": "unbound-literal",
+      "detail": "Field \"fills\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:6",
+      "reason": "unbound-literal",
+      "detail": "Field \"itemSpacing\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:6",
+      "reason": "unbound-literal",
+      "detail": "Field \"paddingLeft\" has no bound variable; using raw literal value."
+    }
+  ]
+}

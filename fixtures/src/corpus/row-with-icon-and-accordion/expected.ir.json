@@ -1,0 +1,138 @@
+{
+  "nodes": [
+    {
+      "kind": "layout",
+      "direction": "column",
+      "gap": { "token": null, "value": 16 },
+      "padding": { "all": { "token": null, "value": 0 } },
+      "mainAxisAlign": "start",
+      "crossAxisAlign": "start",
+      "sizing": { "width": "fixed", "height": "hug" },
+      "background": null,
+      "cornerRadius": null,
+      "children": [
+        {
+          "kind": "text",
+          "text": "Help",
+          "typography": { "token": null },
+          "color": null,
+          "source": {
+            "nodeId": "test:9",
+            "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+            "version": "1",
+            "path": ["Screen", "Help"]
+          }
+        },
+        {
+          "kind": "layout",
+          "direction": "row",
+          "gap": { "token": null, "value": 12 },
+          "padding": { "all": { "token": null, "value": 0 } },
+          "mainAxisAlign": "spaceBetween",
+          "crossAxisAlign": "center",
+          "sizing": { "width": "hug", "height": "hug" },
+          "background": null,
+          "cornerRadius": null,
+          "children": [
+            {
+              "kind": "asset",
+              "assetType": "icon",
+              "exportRef": "icon_bell",
+              "width": 24,
+              "height": 24,
+              "source": {
+                "nodeId": "test:3",
+                "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+                "version": "1",
+                "path": ["Screen", "FaqRow", "Icon/Bell"]
+              }
+            },
+            {
+              "kind": "text",
+              "text": "Frequently asked questions",
+              "typography": { "token": null },
+              "color": null,
+              "source": {
+                "nodeId": "test:4",
+                "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+                "version": "1",
+                "path": ["Screen", "FaqRow", "Frequently asked questions"]
+              }
+            },
+            {
+              "kind": "instance",
+              "component": null,
+              "figmaComponentSetName": "Accordions",
+              "figmaComponentKey": "accordions-primary-collapsed",
+              "props": {},
+              "slots": {},
+              "layout": {},
+              "unresolved": [
+                {
+                  "nodeId": "test:7",
+                  "reason": "unmapped-component",
+                  "detail": "Figma component and its variants (Type: Primary/Secondary; Expanded: Yes/No) are fully specified and tokens are already generated on the Compose side (platform/design/foundation/token/components/accordions/ Accordions.kt and AccordionsFactory.kt), but no Compose composable exists yet. This is a real gap in the design system, not a mapping problem - flag to the design system owner as a candidate for a new component."
+                }
+              ],
+              "source": {
+                "nodeId": "test:7",
+                "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+                "version": "1",
+                "path": ["Screen", "FaqRow", "Accordions"]
+              }
+            }
+          ],
+          "source": {
+            "nodeId": "test:8",
+            "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+            "version": "1",
+            "path": ["Screen", "FaqRow"]
+          }
+        }
+      ],
+      "source": {
+        "nodeId": "test:10",
+        "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+        "version": "1",
+        "path": ["Screen"]
+      }
+    }
+  ],
+  "unresolved": [
+    {
+      "nodeId": "test:10",
+      "reason": "unbound-literal",
+      "detail": "Field \"itemSpacing\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:10",
+      "reason": "unbound-literal",
+      "detail": "Field \"paddingLeft\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:9",
+      "reason": "unbound-literal",
+      "detail": "Text style has no bound typography variable; using raw literal font."
+    },
+    {
+      "nodeId": "test:8",
+      "reason": "unbound-literal",
+      "detail": "Field \"itemSpacing\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:8",
+      "reason": "unbound-literal",
+      "detail": "Field \"paddingLeft\" has no bound variable; using raw literal value."
+    },
+    {
+      "nodeId": "test:4",
+      "reason": "unbound-literal",
+      "detail": "Text style has no bound typography variable; using raw literal font."
+    },
+    {
+      "nodeId": "test:7",
+      "reason": "unmapped-component",
+      "detail": "Figma component and its variants (Type: Primary/Secondary; Expanded: Yes/No) are fully specified and tokens are already generated on the Compose side (platform/design/foundation/token/components/accordions/ Accordions.kt and AccordionsFactory.kt), but no Compose composable exists yet. This is a real gap in the design system, not a mapping problem - flag to the design system owner as a candidate for a new component."
+    }
+  ]
+}
