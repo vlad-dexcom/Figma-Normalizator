@@ -318,5 +318,6 @@
       "reason": "unmapped-variant",
       "detail": "Figma has an 'Elevated Action' Style variant. AppButtonType has no PascalCase-normalized equivalent ('ElevatedAction' does not exist in Compose). Needs design system team follow-up before this variant value can be code-generated."
     }
-  ]
+  ],
+  "version": "1"
 }

@@ -134,5 +134,6 @@
       "reason": "unmapped-component",
       "detail": "Figma component and its variants (Type: Primary/Secondary; Expanded: Yes/No) are fully specified and tokens are already generated on the Compose side (platform/design/foundation/token/components/accordions/ Accordions.kt and AccordionsFactory.kt), but no Compose composable exists yet. This is a real gap in the design system, not a mapping problem - flag to the design system owner as a candidate for a new component."
     }
-  ]
+  ],
+  "version": "1"
 }
