@@ -7,6 +7,17 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "fixtures:update": "tsx scripts/update-fixtures.ts"
+  },
+  "dependencies": {
+    "@figma-normalizator/mappings": "*",
+    "@figma-normalizator/plugin": "*",
+    "@figma-normalizator/schema": "*"
+  },
+  "devDependencies": {
+    "ajv": "^8.20.0",
+    "prettier": "^3.3.3",
+    "tsx": "^4.19.2"
   }
 }
