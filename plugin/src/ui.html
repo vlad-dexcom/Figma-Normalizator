@@ -1,0 +1,192 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Figma Normalizator</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font:
+          12px -apple-system,
+          "Segoe UI",
+          sans-serif;
+        margin: 0;
+        padding: 0;
+        color: #1a1a1a;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+      header {
+        padding: 10px 12px;
+        border-bottom: 1px solid #e0e0e0;
+        flex: none;
+      }
+      header .label {
+        color: #888;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      header .name {
+        font-size: 13px;
+        font-weight: 600;
+        margin-top: 2px;
+        word-break: break-word;
+      }
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding: 10px 12px;
+        border-bottom: 1px solid #e0e0e0;
+        flex: none;
+      }
+      button {
+        font: inherit;
+        border: 1px solid #d0d0d0;
+        background: #fff;
+        border-radius: 6px;
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+      button.primary {
+        background: #18a0fb;
+        border-color: #18a0fb;
+        color: #fff;
+        font-weight: 600;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      .copy-status {
+        font-size: 11px;
+        color: #1a7a3a;
+      }
+      .copy-status.error {
+        color: #b3261e;
+      }
+      main {
+        flex: 1;
+        overflow: auto;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      section h2 {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #888;
+        margin: 0 0 6px;
+      }
+      #banner {
+        display: none;
+        background: #fff2e6;
+        border: 1px solid #ffb066;
+        color: #9a4d00;
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-weight: 600;
+      }
+      #banner.visible {
+        display: block;
+      }
+      #ir-preview {
+        width: 100%;
+        min-height: 160px;
+        resize: vertical;
+        font:
+          11px ui-monospace,
+          "SF Mono",
+          Menlo,
+          monospace;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 8px;
+        background: #fafafa;
+        white-space: pre;
+        overflow: auto;
+      }
+      .warning-group {
+        margin-bottom: 10px;
+      }
+      .warning-group-title {
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .warning-entry {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 6px 8px;
+        border: 1px solid #eee;
+        border-radius: 6px;
+        margin-bottom: 4px;
+      }
+      .warning-entry .text {
+        min-width: 0;
+      }
+      .warning-entry .detail {
+        color: #666;
+        margin-top: 2px;
+      }
+      .warning-entry .node-id {
+        color: #999;
+        font:
+          10px ui-monospace,
+          monospace;
+        margin-top: 2px;
+      }
+      .warning-entry button {
+        flex: none;
+      }
+      #empty-warnings,
+      #empty-ir {
+        color: #888;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="label">Selected layer</div>
+      <div class="name" id="selection-name">Nothing selected</div>
+    </header>
+    <div class="toolbar">
+      <button class="primary" id="extract-button">Extract</button>
+      <button id="export-button" disabled>Export</button>
+      <button id="copy-button" disabled>Copy to clipboard</button>
+      <span id="copy-status" class="copy-status"></span>
+    </div>
+    <main>
+      <div id="banner"></div>
+      <section>
+        <h2>Warnings</h2>
+        <div id="warnings"><p id="empty-warnings">No warnings yet — click Extract.</p></div>
+      </section>
+      <section>
+        <h2>IR preview</h2>
+        <pre id="ir-preview">Click Extract to see the IR for the current selection.</pre>
+      </section>
+    </main>
+    <!-- BUILD:UI_SCRIPT -->
+    <!--
+      Built via `npm run build` in this package: `scripts/build.mjs`
+      bundles `src/ui.ts` with esbuild and replaces the comment above with
+      an inline <script> tag containing the bundled JS. Figma's plugin UI
+      is a sandboxed iframe with no external resource loading (and this
+      manifest declares no network access), so the UI's JS must be inlined
+      directly into this HTML file rather than referenced from a separate
+      file.
+    -->
+  </body>
+</html>

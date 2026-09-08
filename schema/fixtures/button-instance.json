@@ -1,0 +1,20 @@
+{
+  "kind": "instance",
+  "component": "AppButton",
+  "figmaComponentSetName": "Buttons",
+  "figmaComponentKey": "a91f...",
+  "props": {
+    "text": { "value": "Start sensor" },
+    "type": { "variant": "Primary", "from": "Style=Primary" },
+    "size": { "variant": "Large", "from": "Size=Large" }
+  },
+  "slots": { "leadingIcon": null, "trailingIcon": null },
+  "layout": { "sizing": { "width": "fill" } },
+  "unresolved": [],
+  "source": {
+    "nodeId": "12:340",
+    "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+    "version": "1",
+    "path": ["Screen", "Footer", "Buttons"]
+  }
+}

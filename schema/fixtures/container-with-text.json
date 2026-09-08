@@ -1,0 +1,39 @@
+{
+  "kind": "layout",
+  "direction": "column",
+  "gap": { "token": "spacing/md", "value": 16 },
+  "padding": { "all": { "token": "spacing/lg", "value": 24 } },
+  "background": {
+    "token": "color/surface/canvas/primary",
+    "value": "#FFFFFF",
+    "modes": { "light": "#FFFFFF", "dark": "#000000" }
+  },
+  "cornerRadius": null,
+  "mainAxisAlign": "start",
+  "crossAxisAlign": "stretch",
+  "sizing": { "width": "fill", "height": "hug" },
+  "children": [
+    {
+      "kind": "text",
+      "text": "Sensor expired",
+      "typography": { "token": "typography/body/large" },
+      "color": {
+        "token": "color/text/base/default",
+        "value": "#1A1A1A",
+        "modes": { "light": "#1A1A1A", "dark": "#FFFFFF" }
+      },
+      "source": {
+        "nodeId": "12:342",
+        "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+        "version": "1",
+        "path": ["Screen", "Body", "Text"]
+      }
+    }
+  ],
+  "source": {
+    "nodeId": "12:341",
+    "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+    "version": "1",
+    "path": ["Screen", "Body"]
+  }
+}
