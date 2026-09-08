@@ -77,6 +77,23 @@ describe("buildInstanceNode", () => {
     ]);
   });
 
+  it("flags Checkbox (status: unmapped) with component: null even though its entry has a populated compose block", async () => {
+    // Regression test: mappings/component-map.yaml's Checkbox entry has
+    // `status: unmapped` (no standalone Figma component set exists yet)
+    // but still carries a populated `compose.component` field documenting
+    // a "someday" target name. The extractor must treat `status` as
+    // authoritative and not silently resolve this as mapped.
+    const componentSet = mockComponentSet({ name: "Checkbox" });
+    const main = mockComponent({ name: "Selected=Yes, Disabled=No", parent: componentSet });
+    const node = mockInstance({ name: "Checkbox", mainComponent: main, componentProperties: {} });
+
+    const { node: ir, unresolved } = await buildInstanceNode(node, undefined, ctx);
+    expect(ir.component).toBeNull();
+    expect(unresolved).toEqual([
+      expect.objectContaining({ nodeId: node.id, reason: "unmapped-component" }),
+    ]);
+  });
+
   it("flags a component set with no component-map entry at all", async () => {
     const componentSet = mockComponentSet({ name: "Some Unknown Set" });
     const main = mockComponent({ name: "Default", parent: componentSet });
