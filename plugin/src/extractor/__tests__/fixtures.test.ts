@@ -52,10 +52,12 @@ describe("fixture: button-instance.json", () => {
       ancestorPath: ["Screen", "Footer"],
     };
 
-    const { node: ir } = await buildInstanceNode(instance, footer, ctx);
+    const result = await buildInstanceNode(instance, footer, ctx);
+    expect(result.kind).toBe("mapped");
+    if (result.kind !== "mapped") throw new Error("expected mapped result");
     const fixture = readFixture("button-instance.json") as IRInstanceNode;
 
-    expect(ir).toEqual(fixture);
+    expect(result.node).toEqual(fixture);
   });
 });
 

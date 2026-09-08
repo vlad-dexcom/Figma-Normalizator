@@ -58,28 +58,6 @@
                 "version": "1",
                 "path": ["Screen", "FaqRow", "Frequently asked questions"]
               }
-            },
-            {
-              "kind": "instance",
-              "component": null,
-              "figmaComponentSetName": "Accordions",
-              "figmaComponentKey": "accordions-primary-collapsed",
-              "props": {},
-              "slots": {},
-              "layout": {},
-              "unresolved": [
-                {
-                  "nodeId": "test:7",
-                  "reason": "unmapped-component",
-                  "detail": "Figma component and its variants (Type: Primary/Secondary; Expanded: Yes/No) are fully specified and tokens are already generated on the Compose side (platform/design/foundation/token/components/accordions/ Accordions.kt and AccordionsFactory.kt), but no Compose composable exists yet. This is a real gap in the design system, not a mapping problem - flag to the design system owner as a candidate for a new component."
-                }
-              ],
-              "source": {
-                "nodeId": "test:7",
-                "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
-                "version": "1",
-                "path": ["Screen", "FaqRow", "Accordions"]
-              }
             }
           ],
           "source": {

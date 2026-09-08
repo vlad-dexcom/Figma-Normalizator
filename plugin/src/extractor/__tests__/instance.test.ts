@@ -21,19 +21,23 @@ describe("buildInstanceNode", () => {
       },
     });
 
-    const { node: ir, unresolved } = await buildInstanceNode(node, undefined, ctx);
-    expect(ir.component).toBe("AppButton");
-    expect(ir.figmaComponentSetName).toBe("Buttons");
-    expect(ir.props.type).toEqual({ variant: "Primary", from: "Style=Primary" });
-    expect(ir.props.size).toEqual({ variant: "Large", from: "Size=Large" });
-    expect(ir.props.text).toEqual({ value: "Start sensor" });
-    expect(unresolved).toEqual([]);
+    const result = await buildInstanceNode(node, undefined, ctx);
+    expect(result.kind).toBe("mapped");
+    if (result.kind !== "mapped") throw new Error("expected mapped result");
+    expect(result.node.component).toBe("AppButton");
+    expect(result.node.figmaComponentSetName).toBe("Buttons");
+    expect(result.node.props.type).toEqual({ variant: "Primary", from: "Style=Primary" });
+    expect(result.node.props.size).toEqual({ variant: "Large", from: "Size=Large" });
+    expect(result.node.props.text).toEqual({ value: "Start sensor" });
+    expect(result.unresolved).toEqual([]);
   });
 
   it("stops at the instance boundary: the built node has no descended children", async () => {
     const node = buttonsInstance({ name: "Buttons", componentProperties: {} });
-    const { node: ir } = await buildInstanceNode(node, undefined, ctx);
-    expect(ir).not.toHaveProperty("children");
+    const result = await buildInstanceNode(node, undefined, ctx);
+    expect(result.kind).toBe("mapped");
+    if (result.kind !== "mapped") throw new Error("expected mapped result");
+    expect(result.node).not.toHaveProperty("children");
   });
 
   it("routes Buttons Type=Icon Only to AppIconButton, keeping the raw figmaComponentSetName", async () => {
@@ -45,9 +49,11 @@ describe("buildInstanceNode", () => {
       },
     });
 
-    const { node: ir } = await buildInstanceNode(node, undefined, ctx);
-    expect(ir.component).toBe("AppIconButton");
-    expect(ir.figmaComponentSetName).toBe("Buttons");
+    const result = await buildInstanceNode(node, undefined, ctx);
+    expect(result.kind).toBe("mapped");
+    if (result.kind !== "mapped") throw new Error("expected mapped result");
+    expect(result.node.component).toBe("AppIconButton");
+    expect(result.node.figmaComponentSetName).toBe("Buttons");
   });
 
   it("flags an unmapped variant value with reason unmapped-variant and a null variant", async () => {
@@ -58,26 +64,28 @@ describe("buildInstanceNode", () => {
       },
     });
 
-    const { node: ir, unresolved } = await buildInstanceNode(node, undefined, ctx);
-    expect(ir.props.type).toEqual({ variant: null, from: "Style=Elevated Action" });
-    expect(unresolved).toEqual([
+    const result = await buildInstanceNode(node, undefined, ctx);
+    expect(result.kind).toBe("mapped");
+    if (result.kind !== "mapped") throw new Error("expected mapped result");
+    expect(result.node.props.type).toEqual({ variant: null, from: "Style=Elevated Action" });
+    expect(result.unresolved).toEqual([
       expect.objectContaining({ nodeId: node.id, reason: "unmapped-variant" }),
     ]);
   });
 
-  it("flags a fully unmapped component set (Accordions) with component: null", async () => {
+  it("flags a fully unmapped component set (Accordions) as an unmapped result", async () => {
     const componentSet = mockComponentSet({ name: "Accordions" });
     const main = mockComponent({ name: "Type=Primary, Expanded=No", parent: componentSet });
     const node = mockInstance({ name: "Accordions", mainComponent: main, componentProperties: {} });
 
-    const { node: ir, unresolved } = await buildInstanceNode(node, undefined, ctx);
-    expect(ir.component).toBeNull();
-    expect(unresolved).toEqual([
+    const result = await buildInstanceNode(node, undefined, ctx);
+    expect(result.kind).toBe("unmapped");
+    expect(result.unresolved).toEqual([
       expect.objectContaining({ nodeId: node.id, reason: "unmapped-component" }),
     ]);
   });
 
-  it("flags Checkbox (status: unmapped) with component: null even though its entry has a populated compose block", async () => {
+  it("flags Checkbox (status: unmapped) as an unmapped result even though its entry has a populated compose block", async () => {
     // Regression test: mappings/component-map.yaml's Checkbox entry has
     // `status: unmapped` (no standalone Figma component set exists yet)
     // but still carries a populated `compose.component` field documenting
@@ -87,28 +95,28 @@ describe("buildInstanceNode", () => {
     const main = mockComponent({ name: "Selected=Yes, Disabled=No", parent: componentSet });
     const node = mockInstance({ name: "Checkbox", mainComponent: main, componentProperties: {} });
 
-    const { node: ir, unresolved } = await buildInstanceNode(node, undefined, ctx);
-    expect(ir.component).toBeNull();
-    expect(unresolved).toEqual([
+    const result = await buildInstanceNode(node, undefined, ctx);
+    expect(result.kind).toBe("unmapped");
+    expect(result.unresolved).toEqual([
       expect.objectContaining({ nodeId: node.id, reason: "unmapped-component" }),
     ]);
   });
 
-  it("flags a component set with no component-map entry at all", async () => {
+  it("flags a component set with no component-map entry at all as an unmapped result", async () => {
     const componentSet = mockComponentSet({ name: "Some Unknown Set" });
     const main = mockComponent({ name: "Default", parent: componentSet });
     const node = mockInstance({ name: "Unknown", mainComponent: main });
 
-    const { node: ir, unresolved } = await buildInstanceNode(node, undefined, ctx);
-    expect(ir.component).toBeNull();
-    expect(unresolved[0]?.reason).toBe("unmapped-component");
+    const result = await buildInstanceNode(node, undefined, ctx);
+    expect(result.kind).toBe("unmapped");
+    expect(result.unresolved[0]?.reason).toBe("unmapped-component");
   });
 
   it("flags an instance with an unresolvable main component as missing-main-component", async () => {
     const node = mockInstance({ name: "Buttons", mainComponent: null, componentProperties: {} });
 
-    const { unresolved } = await buildInstanceNode(node, undefined, ctx);
-    expect(unresolved).toContainEqual(
+    const result = await buildInstanceNode(node, undefined, ctx);
+    expect(result.unresolved).toContainEqual(
       expect.objectContaining({ nodeId: node.id, reason: "missing-main-component" }),
     );
   });
@@ -122,8 +130,10 @@ describe("buildInstanceNode", () => {
       componentProperties: { State: { type: "VARIANT", value: "On" } },
     });
 
-    const { node: ir } = await buildInstanceNode(node, undefined, ctx);
-    expect(ir.component).toBe("AppSwitch");
-    expect(ir.props.checked).toEqual({ value: true });
+    const result = await buildInstanceNode(node, undefined, ctx);
+    expect(result.kind).toBe("mapped");
+    if (result.kind !== "mapped") throw new Error("expected mapped result");
+    expect(result.node.component).toBe("AppSwitch");
+    expect(result.node.props.checked).toEqual({ value: true });
   });
 });
