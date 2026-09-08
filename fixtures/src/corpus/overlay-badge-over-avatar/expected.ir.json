@@ -127,6 +127,11 @@
       "detail": "Text style has no bound typography variable; using raw literal font."
     },
     {
+      "nodeId": "test:6",
+      "reason": "absolute-positioning",
+      "detail": "1 absolutely-positioned child/children inside Auto Layout parent \"AvatarStack\"."
+    },
+    {
       "nodeId": "test:8",
       "reason": "unbound-literal",
       "detail": "Text style has no bound typography variable; using raw literal font."
