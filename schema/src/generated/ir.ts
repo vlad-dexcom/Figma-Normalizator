@@ -40,9 +40,9 @@ export interface LayoutNode {
  */
 export interface TokenValue {
   /**
-   * The raw Figma variable/style path, e.g. "color/text/base/default".
+   * The raw Figma variable/style path, e.g. "color/text/base/default". `null` means this value is a raw literal with no bound Figma variable; extractors MUST also push an UnresolvedEntry with reason "unbound-literal" alongside a null token rather than inventing a path.
    */
-  token: string;
+  token: string | null;
   /**
    * The concrete resolved value for the mode active at extraction time.
    */
@@ -89,7 +89,7 @@ export interface Provenance {
    */
   version: string;
   /**
-   * Stable ancestor chain of node names/ids from the nearest meaningful root down to (but not including) this node, used for diffing across re-exports.
+   * Stable chain of node names from the nearest meaningful root down to and including this node's own name, used for diffing across re-exports (e.g. ["Screen", "Footer", "Buttons"] for a node named "Buttons" nested under "Screen" > "Footer").
    */
   path: string[];
 }
@@ -116,9 +116,9 @@ export interface StyledSegment {
  */
 export interface TokenRef {
   /**
-   * The raw Figma typography style path, e.g. "typography/body/large".
+   * The raw Figma typography style path, e.g. "typography/body/large". `null` means this text has no bound typography style/variable (a raw literal font); extractors MUST also push an UnresolvedEntry with reason "unbound-literal" alongside a null token rather than inventing a path.
    */
-  token: string;
+  token: string | null;
   /**
    * Reserved for a later stage: the generated design-system symbol name for this token. Optional and unused in v1.
    */
@@ -158,10 +158,10 @@ export interface TextOrBooleanPropValue {
   value: string | number | boolean;
 }
 /**
- * For VARIANT component properties. `from` is the raw Figma variant property value (e.g. "Style=Primary") kept for traceability back to the source.
+ * For VARIANT component properties. `from` is the raw Figma variant property value (e.g. "Style=Primary") kept for traceability back to the source. `variant` is `null` when the component-map has no Compose equivalent for this specific Figma variant value (component-map.yaml status: unmapped) — extractors MUST also push an UnresolvedEntry with reason "unmapped-variant" alongside a null variant rather than guessing.
  */
 export interface VariantPropValue {
-  variant: string;
+  variant: string | null;
   from: string;
 }
 /**
