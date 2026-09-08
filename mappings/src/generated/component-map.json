@@ -1,0 +1,477 @@
+{
+  "version": 1,
+  "figma": {
+    "fileKey": "z4Ns3yQoXwMgjky6H9WYtP",
+    "fileName": "NUI - iOS Components"
+  },
+  "entries": [
+    {
+      "figmaComponentSet": "Buttons",
+      "figmaNodeId": "165:3186",
+      "status": "mapped",
+      "compose": {
+        "component": "AppButton",
+        "package": "com.dexcom.platform.design.component.button"
+      },
+      "routing": [
+        {
+          "when": {
+            "figmaProperty": "Type",
+            "figmaValue": "Icon Only"
+          },
+          "redirectTo": "Buttons (Type=Icon Only) -> AppIconButton",
+          "note": "When Type=Icon Only, the correct target component is AppIconButton, not AppButton. See the separate entry below for its variant map."
+        }
+      ],
+      "variants": [
+        {
+          "figmaProperty": "Style",
+          "composeProperty": "type",
+          "composeEnum": "AppButtonType",
+          "values": [
+            {
+              "figmaValue": "Primary",
+              "composeValue": "Primary"
+            },
+            {
+              "figmaValue": "Secondary",
+              "composeValue": "Secondary"
+            },
+            {
+              "figmaValue": "Secondary Emphasized",
+              "composeValue": "SecondaryEmphasized"
+            },
+            {
+              "figmaValue": "Tertiary",
+              "composeValue": "Tertiary"
+            },
+            {
+              "figmaValue": "Destructive Emphasized",
+              "composeValue": "DestructiveEmphasized"
+            },
+            {
+              "figmaValue": "Link",
+              "composeValue": "Link"
+            },
+            {
+              "figmaValue": "Link Subtle",
+              "composeValue": "LinkSubtle"
+            },
+            {
+              "figmaValue": "Link Emphasized",
+              "composeValue": "LinkEmphasized"
+            },
+            {
+              "figmaValue": "Destructive",
+              "composeValue": "Destructive"
+            },
+            {
+              "figmaValue": "Elevated Action",
+              "status": "unmapped",
+              "reason": "Figma has an 'Elevated Action' Style variant. AppButtonType has no PascalCase-normalized equivalent ('ElevatedAction' does not exist in Compose). Needs design system team follow-up before this variant value can be code-generated."
+            }
+          ],
+          "mappingRule": "Remove spaces from the Figma value to get the Compose enum member name (e.g. 'Secondary Emphasized' -> 'SecondaryEmphasized')."
+        },
+        {
+          "figmaProperty": "Size",
+          "composeProperty": "size",
+          "composeEnum": "AppButtonSize",
+          "values": [
+            {
+              "figmaValue": "Small",
+              "composeValue": "Small"
+            },
+            {
+              "figmaValue": "Medium",
+              "composeValue": "Medium"
+            },
+            {
+              "figmaValue": "Large",
+              "composeValue": "Large"
+            },
+            {
+              "figmaValue": "XLarge",
+              "status": "unmapped",
+              "reason": "Figma has an 'XLarge' Size variant. AppButtonSize only defines Small, Medium, Large - there is no XLarge equivalent. Needs design system team follow-up before this variant value can be code-generated."
+            }
+          ]
+        }
+      ],
+      "outOfScope": {
+        "properties": [
+          "✏️ CTA Label",
+          "Trailing Icon",
+          "Leading Icon",
+          "Swap Icon",
+          "Badge",
+          "Is Squircle",
+          "State",
+          "Has Label"
+        ],
+        "note": "component-map.yaml only covers VARIANT-type Figma properties. These non-variant properties map to composable parameters (text, leadingIcon/trailingIcon slots, enabled/pressed/hover states handled by the Style system, etc.) - that parameter mapping is an extractor concern, not a component-map concern."
+      }
+    },
+    {
+      "figmaComponentSet": "Buttons (Type=Icon Only)",
+      "figmaNodeId": "165:3186",
+      "status": "mapped",
+      "notes": "Same Figma node/component set as 'Buttons' above (node_id 165:3186). This entry only applies when the Type property equals 'Icon Only' - see the routing rule on the Buttons entry.",
+      "compose": {
+        "component": "AppIconButton",
+        "package": "com.dexcom.platform.design.component.iconbutton"
+      },
+      "variants": [
+        {
+          "figmaProperty": "Style",
+          "composeProperty": "type",
+          "composeEnum": "AppIconButtonType",
+          "values": [
+            {
+              "figmaValue": "Primary",
+              "composeValue": "Primary"
+            },
+            {
+              "figmaValue": "Secondary",
+              "composeValue": "Secondary"
+            },
+            {
+              "figmaValue": "Secondary Emphasized",
+              "composeValue": "SecondaryEmphasized"
+            },
+            {
+              "figmaValue": "Tertiary",
+              "composeValue": "Tertiary"
+            },
+            {
+              "figmaValue": "Link",
+              "composeValue": "Link"
+            },
+            {
+              "figmaValue": "Link Subtle",
+              "composeValue": "LinkSubtle"
+            },
+            {
+              "figmaValue": "Link Emphasized",
+              "composeValue": "LinkEmphasized"
+            },
+            {
+              "figmaValue": "Destructive",
+              "status": "unmapped",
+              "reason": "AppIconButtonType has no Destructive equivalent (unlike AppButtonType, which does). Needs design system team follow-up."
+            },
+            {
+              "figmaValue": "Destructive Emphasized",
+              "status": "unmapped",
+              "reason": "AppIconButtonType has no DestructiveEmphasized equivalent (unlike AppButtonType, which does). Needs design system team follow-up."
+            },
+            {
+              "figmaValue": "Elevated Action",
+              "status": "unmapped",
+              "reason": "Same gap as on the 'Buttons' entry - AppIconButtonType has no PascalCase-normalized equivalent of 'Elevated Action'. Needs design system team follow-up."
+            }
+          ]
+        },
+        {
+          "figmaProperty": "Size",
+          "composeProperty": "size",
+          "composeEnum": "AppIconButtonSize",
+          "values": [
+            {
+              "figmaValue": "Small",
+              "composeValue": "Small"
+            },
+            {
+              "figmaValue": "Medium",
+              "composeValue": "Medium"
+            },
+            {
+              "figmaValue": "Large",
+              "composeValue": "Large"
+            },
+            {
+              "figmaValue": "XLarge",
+              "composeValue": "XLarge"
+            }
+          ],
+          "notes": "Full 1:1 match here, unlike AppButtonSize which is missing XLarge."
+        },
+        {
+          "figmaProperty": "Is Squircle",
+          "composeProperty": "shape",
+          "composeEnum": "AppIconButtonShape",
+          "values": [
+            {
+              "figmaValue": "Yes",
+              "composeValue": "Squircle"
+            },
+            {
+              "figmaValue": "No",
+              "composeValue": "Circular"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "figmaComponentSet": "Badges",
+      "figmaNodeId": "156:16451",
+      "status": "mapped",
+      "compose": {
+        "component": "AppBadge",
+        "package": "com.dexcom.platform.design.component.badge"
+      },
+      "variants": [
+        {
+          "figmaProperty": "Type",
+          "composeProperty": "type",
+          "composeEnum": "AppBadgeType",
+          "values": [
+            {
+              "figmaValue": "Important",
+              "composeValue": "Important"
+            },
+            {
+              "figmaValue": "New",
+              "composeValue": "New"
+            },
+            {
+              "figmaValue": "System",
+              "composeValue": "System"
+            },
+            {
+              "figmaValue": "Default",
+              "status": "unmapped",
+              "reason": "Figma has a 'Default' Type variant. AppBadgeType has no equivalent (Important, New, System only). Needs design system team follow-up."
+            }
+          ]
+        },
+        {
+          "figmaProperty": "Size",
+          "composeProperty": "size",
+          "composeEnum": "AppBadgeSize",
+          "values": [
+            {
+              "figmaValue": "Large",
+              "composeValue": "Large"
+            },
+            {
+              "figmaValue": "Small",
+              "composeValue": "Small"
+            },
+            {
+              "figmaValue": "X-Small",
+              "status": "unmapped",
+              "reason": "Figma has an 'X-Small' Size variant with no Compose equivalent. Compose separately has a 'Medium' size with no Figma equivalent. These do NOT correspond 1:1 by name or position: needs design system owner clarification on whether Figma X-Small and Compose Medium are meant to be the same size under different names, or genuinely different scales."
+            },
+            {
+              "composeValue": "Medium",
+              "figmaValue": null,
+              "status": "unmapped",
+              "reason": "Compose AppBadgeSize has a 'Medium' value with no corresponding Figma Size variant. See the note on X-Small above - naming-mismatch, needs design system owner clarification."
+            }
+          ],
+          "notes": "Large and Small map cleanly by name; X-Small/Medium do not correspond 1:1 - flagged individually above."
+        }
+      ]
+    },
+    {
+      "figmaComponentSet": "Banners",
+      "figmaNodeId": "176:5132",
+      "status": "mapped",
+      "notes": "Names diverge from Figma here, unlike most other entries in this file - verify the semantic mapping below with the design system owner. This is the one exception to the otherwise close Figma/Compose naming convention.",
+      "compose": {
+        "component": "AppBanner",
+        "package": "com.dexcom.platform.design.component.banner"
+      },
+      "variants": [
+        {
+          "figmaProperty": "Type",
+          "composeProperty": "type",
+          "composeEnum": "AppBannerType",
+          "mappingRule": "Mapped by meaning, not string similarity - this is NOT a simple rename despite other components in this file being close.",
+          "values": [
+            {
+              "figmaValue": "Informative",
+              "composeValue": "Informative",
+              "notes": "Exact name match."
+            },
+            {
+              "figmaValue": "Attention",
+              "composeValue": "Warning",
+              "notes": "Semantic match; name differs (Attention -> Warning)."
+            },
+            {
+              "figmaValue": "Successful",
+              "composeValue": "Success",
+              "notes": "Semantic match; name differs - note the dropped 'ful' suffix (Successful -> Success)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "figmaComponentSet": "Info Box",
+      "figmaNodeId": "179:9324",
+      "status": "mapped",
+      "compose": {
+        "component": "AppInfoBox",
+        "package": "com.dexcom.platform.design.component.infobox"
+      },
+      "variants": [
+        {
+          "figmaProperty": "Style",
+          "composeProperty": "style",
+          "composeEnum": "AppInfoBoxStyle",
+          "mappingRule": "Remove the space from the Figma value (e.g. 'High Emphasis' -> 'HighEmphasis').",
+          "values": [
+            {
+              "figmaValue": "High Emphasis",
+              "composeValue": "HighEmphasis"
+            },
+            {
+              "figmaValue": "Low Emphasis",
+              "composeValue": "LowEmphasis"
+            }
+          ]
+        }
+      ],
+      "notes": "Clean 1:1 match."
+    },
+    {
+      "figmaComponentSet": "Tags",
+      "figmaNodeId": "221:8878",
+      "status": "mapped",
+      "notes": "The largest naming mismatch found in this file. Only Error and Warning match by name and are confirmed. Everything else on both sides is flagged as unmapped-in-code. This component needs a full design-system-owner review before it can be reliably code generated, since the naming schemes appear to have diverged significantly.",
+      "compose": {
+        "component": "AppTag",
+        "package": "com.dexcom.platform.design.component.tag"
+      },
+      "variants": [
+        {
+          "figmaProperty": "Style",
+          "composeProperty": "type",
+          "composeEnum": "AppTagType",
+          "values": [
+            {
+              "figmaValue": "Error",
+              "composeValue": "Error",
+              "status": "mapped"
+            },
+            {
+              "figmaValue": "Warning",
+              "composeValue": "Warning",
+              "status": "mapped"
+            },
+            {
+              "figmaValue": "Default",
+              "status": "unmapped",
+              "reason": "No confirmed Compose equivalent. Compose's 'Neutral' value MIGHT correspond to Figma's 'Default' but this is only a guess, not a confirmed mapping - needs design system owner review."
+            },
+            {
+              "figmaValue": "Info",
+              "status": "unmapped",
+              "reason": "No Compose equivalent found for Figma 'Info'. Needs design system owner review."
+            },
+            {
+              "figmaValue": "Attention",
+              "status": "unmapped",
+              "reason": "No Compose equivalent found for Figma 'Attention'. Needs design system owner review."
+            },
+            {
+              "figmaValue": "Transparent",
+              "status": "unmapped",
+              "reason": "No Compose equivalent found for Figma 'Transparent'. Needs design system owner review."
+            },
+            {
+              "composeValue": "Neutral",
+              "figmaValue": null,
+              "status": "unmapped",
+              "reason": "Compose 'Neutral' has no confirmed Figma equivalent. It MIGHT correspond to Figma's 'Default' - flagged as a guess only, not a confirmed mapping. Needs design system owner review."
+            },
+            {
+              "composeValue": "Success",
+              "figmaValue": null,
+              "status": "unmapped",
+              "reason": "Compose 'Success' has no obvious Figma equivalent among the Tags Style values. Needs design system owner review."
+            }
+          ]
+        },
+        {
+          "figmaProperty": "Size",
+          "composeProperty": "size",
+          "status": "unmapped",
+          "reason": "Figma Tags has a Size variant (Large, Small) with no corresponding Compose enum - AppTagType does not expose a size concept. Size might be a separate un-modeled parameter rather than a true variant; needs design system owner review.",
+          "figmaValues": ["Large", "Small"]
+        }
+      ]
+    },
+    {
+      "figmaComponentSet": "Switch",
+      "figmaNodeId": "151:12307",
+      "status": "mapped",
+      "mappingKind": "state-based",
+      "notes": "Distinct pattern from every other entry in this file. Figma's State variant (On/Off) does not correspond to a Compose enum value at all: AppSwitchStyle is not an enum, it is a singleton Style object using state-based styling (a 'checked { }' block keyed off a boolean 'styleState.isChecked'). The extractor should treat this as a component boolean prop (checked = true/false), not a variant enum lookup.",
+      "compose": {
+        "component": "AppSwitch",
+        "package": "com.dexcom.platform.design.component.switch"
+      },
+      "stateMapping": [
+        {
+          "figmaProperty": "State",
+          "composeProperty": "checked",
+          "composeType": "boolean",
+          "values": [
+            {
+              "figmaValue": "On",
+              "composeValue": true
+            },
+            {
+              "figmaValue": "Off",
+              "composeValue": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "figmaComponentSet": "Checkbox",
+      "figmaNodeId": null,
+      "status": "unmapped",
+      "mappingKind": "state-based",
+      "compose": {
+        "component": "AppCheckboxStyle",
+        "package": "com.dexcom.platform.design.component.checkbox"
+      },
+      "reason": "No standalone Figma component set exists for Checkbox as a top-level toggle control. It only appears as a nested asset embedded inside the 'Cards' and 'Lists' component sets (e.g. loose components named 'Type=Checkbox, Selected=Yes, Disabled=Yes' - these are list-row accessories, not standalone components). Needs a decision from the design system owner on whether to extract embedded variants of Cards/Lists as a Figma-side proxy, or treat this as out of IR scope until a standalone component set exists in Figma. AppCheckboxStyle is a singleton state-based Style object (like AppSwitchStyle), not an enum-driven component."
+    },
+    {
+      "figmaComponentSet": "Radio Button",
+      "figmaNodeId": null,
+      "status": "unmapped",
+      "mappingKind": "state-based",
+      "compose": {
+        "component": "AppRadioButtonStyle",
+        "package": "com.dexcom.platform.design.component.radiobutton"
+      },
+      "reason": "No standalone Figma component set exists for Radio Button as a top-level toggle control. It only appears as a nested asset embedded inside the 'Cards' and 'Lists' component sets (e.g. loose components named 'Type=Radio Button, Selected=No, Disabled=No, Alignment=Top' - these are list-row accessories, not standalone components). Needs a decision from the design system owner on whether to extract embedded variants of Cards/Lists as a Figma-side proxy, or treat this as out of IR scope until a standalone component set exists in Figma. AppRadioButtonStyle is a singleton state-based Style object (like AppSwitchStyle), not an enum-driven component."
+    },
+    {
+      "figmaComponentSet": "Accordions",
+      "figmaNodeId": "2286:28421",
+      "status": "unmapped",
+      "compose": null,
+      "reason": "Figma component and its variants (Type: Primary/Secondary; Expanded: Yes/No) are fully specified and tokens are already generated on the Compose side (platform/design/foundation/token/components/accordions/ Accordions.kt and AccordionsFactory.kt), but no Compose composable exists yet. This is a real gap in the design system, not a mapping problem - flag to the design system owner as a candidate for a new component.",
+      "figmaVariantsForReference": [
+        {
+          "figmaProperty": "Type",
+          "figmaValues": ["Primary", "Secondary"]
+        },
+        {
+          "figmaProperty": "Expanded",
+          "figmaValues": ["Yes", "No"]
+        }
+      ]
+    }
+  ]
+}

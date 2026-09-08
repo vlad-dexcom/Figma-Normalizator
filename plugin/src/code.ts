@@ -2,43 +2,69 @@
 // Figma's plugin sandbox, not the UI iframe). Bundled by esbuild into
 // `dist/code.js`, which `manifest.json`'s `main` field points at.
 //
-// TODO(plugin-extractor): This is where the real IR extraction/traversal
-// logic will live — walking the Figma scene graph starting from the
-// current selection or page, resolving:
-//   - layout nodes (Auto Layout intent, not raw coordinates/constraints)
-//   - text nodes (resolved styled text segments, not raw character ranges)
-//   - instance nodes (component + variant/property resolution, mapped via
-//     `mappings/` to design-system components instead of inlined subtrees)
-//   - asset nodes (exportable image/vector fills)
-//   - overlay nodes (interactions/overlays such as modals, tooltips)
-//   - list nodes (repeated/auto-layout-driven collections)
-// and emitting the versioned IR defined by `schema/` (not imported yet —
-// that package is still in-flight in a parallel task).
-//
-// Nothing below this comment is extraction logic; it only proves the
-// build, manifest, and UI wiring work end to end.
+// Runs the extractor (`./extractor`) against the current selection and
+// posts the resulting IR JSON to the UI. There's no real validator UI yet
+// (that's a separate later task, `plugin-validator-ui`) — `figma.notify` and
+// a `postMessage` are enough to prove the extractor runs end to end.
+import { extractSelection, type ExtractionResult, type FigmaNode } from "./extractor/index.js";
 
-/** Minimal slice of the Figma plugin API this scaffold depends on. */
-export type ScaffoldFigmaAPI = Pick<PluginAPI, "showUI" | "closePlugin">;
+/** The minimal slice of the real Figma plugin API this entry point depends on. */
+export interface ExtractFigmaAPI {
+  currentPage: { selection: readonly FigmaNode[] };
+  variables: {
+    getVariableByIdAsync: (id: string) => Promise<unknown>;
+    getVariableCollectionByIdAsync: (id: string) => Promise<unknown>;
+  };
+  fileKey?: string;
+  notify(message: string): void;
+  showUI(html: string, options?: { visible?: boolean; width?: number; height?: number }): void;
+  closePlugin(message?: string): void;
+  ui: { postMessage(message: unknown): void };
+}
 
 /**
- * No-op scaffold command. Shows the placeholder UI briefly and then closes
- * the plugin. Exported (rather than run as a side effect of module load) so
- * it can be exercised by the headless test harness without a real `figma`
- * global.
+ * Extracts the current selection to IR and posts it to the UI.
+ *
+ * Exported (rather than run as a side effect of module load) so it can be
+ * exercised by the headless test harness without a real `figma` global.
  */
-export function runScaffoldCommand(api: ScaffoldFigmaAPI): void {
+export async function runExtractCommand(api: ExtractFigmaAPI): Promise<void> {
+  const selection = api.currentPage.selection;
+
+  if (selection.length === 0) {
+    api.notify("Figma Normalizator: select at least one layer to extract.");
+    api.closePlugin();
+    return;
+  }
+
+  // `variables` is typed loosely on `ExtractFigmaAPI` above (to keep this
+  // file's own API surface small); `extractSelection` wants the narrower
+  // shape it actually calls. Real Figma's `variables` API is a structural
+  // superset of what we need here.
+  const result: ExtractionResult = await extractSelection(
+    { variables: api.variables as unknown as Parameters<typeof extractSelection>[0]["variables"] },
+    selection,
+    { fileKey: api.fileKey ?? "", version: "1" },
+  );
+
   // `__html__` is an ambient global populated by Figma at runtime from
   // manifest.json's `ui` field (see @figma/plugin-typings). It doesn't
   // exist in the headless test environment, so guard with `typeof` rather
   // than referencing it directly (which would throw a ReferenceError).
   const html = typeof __html__ !== "undefined" ? __html__ : "";
   api.showUI(html, { visible: false, width: 240, height: 120 });
-  api.closePlugin("Figma Normalizator: Stage 1 scaffold ready");
+  api.ui.postMessage({ type: "figma-normalizator/ir", ir: result });
+  api.notify(
+    `Figma Normalizator: extracted ${result.nodes.length} node(s), ${result.unresolved.length} unresolved.`,
+  );
+  api.closePlugin("Figma Normalizator: extraction complete");
 }
 
 // Only invoke against the real Figma sandbox when one is present (i.e. not
 // when this module is imported by the headless test harness).
 if (typeof figma !== "undefined") {
-  runScaffoldCommand(figma);
+  // Real Figma nodes are a structural superset of this module's `FigmaNode`
+  // (see extractor/types.ts) — this is the one place the plugin sandbox API
+  // meets the extractor's narrower, more testable node shape.
+  void runExtractCommand(figma as unknown as ExtractFigmaAPI);
 }
