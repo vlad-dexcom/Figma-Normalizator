@@ -87,6 +87,15 @@ describe("buildInstanceNode", () => {
     expect(unresolved[0]?.reason).toBe("unmapped-component");
   });
 
+  it("flags an instance with an unresolvable main component as missing-main-component", async () => {
+    const node = mockInstance({ name: "Buttons", mainComponent: null, componentProperties: {} });
+
+    const { unresolved } = await buildInstanceNode(node, undefined, ctx);
+    expect(unresolved).toContainEqual(
+      expect.objectContaining({ nodeId: node.id, reason: "missing-main-component" }),
+    );
+  });
+
   it("resolves Switch's state-based checked prop", async () => {
     const componentSet = mockComponentSet({ name: "Switch" });
     const main = mockComponent({ name: "State=On", parent: componentSet });

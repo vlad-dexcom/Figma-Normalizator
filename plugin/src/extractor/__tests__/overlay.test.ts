@@ -45,7 +45,9 @@ describe("groupOverlayChildren", () => {
       { node: mockFrame({ name: "a" }), ir: textIr("a") },
       { node: mockFrame({ name: "b" }), ir: textIr("b") },
     ];
-    expect(groupOverlayChildren(parent, items, ctx)).toEqual([textIr("a"), textIr("b")]);
+    const result = groupOverlayChildren(parent, items, ctx);
+    expect(result.children).toEqual([textIr("a"), textIr("b")]);
+    expect(result.unresolved).toEqual([]);
   });
 
   it("collects absolute children into a single overlay node at the position they'd start", () => {
@@ -78,14 +80,17 @@ describe("groupOverlayChildren", () => {
     ];
 
     const result = groupOverlayChildren(parent, items, ctx);
-    expect(result).toHaveLength(3);
-    expect(result[0]).toEqual(textIr("a"));
-    expect(result[1]?.kind).toBe("overlay");
-    if (result[1]?.kind === "overlay") {
-      expect(result[1].children).toHaveLength(2);
-      expect(result[1].children[0]?.node).toEqual(textIr("badge"));
-      expect(result[1].children[1]?.node).toEqual(textIr("fab"));
+    expect(result.children).toHaveLength(3);
+    expect(result.children[0]).toEqual(textIr("a"));
+    expect(result.children[1]?.kind).toBe("overlay");
+    if (result.children[1]?.kind === "overlay") {
+      expect(result.children[1].children).toHaveLength(2);
+      expect(result.children[1].children[0]?.node).toEqual(textIr("badge"));
+      expect(result.children[1].children[1]?.node).toEqual(textIr("fab"));
     }
-    expect(result[2]).toEqual(textIr("b"));
+    expect(result.children[2]).toEqual(textIr("b"));
+    expect(result.unresolved).toEqual([
+      expect.objectContaining({ nodeId: parent.id, reason: "absolute-positioning" }),
+    ]);
   });
 });

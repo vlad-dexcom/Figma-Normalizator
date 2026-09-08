@@ -73,6 +73,24 @@ export async function buildInstanceNode(
   const figmaComponentSetName = mainComponent ? resolveComponentSetName(mainComponent) : node.name;
   const figmaComponentKey = mainComponent?.key ?? mainComponent?.id ?? node.id;
 
+  // `getMainComponentAsync()` resolving to null (main component deleted, or
+  // from a library that isn't available) is the closest signal Figma's
+  // plugin API exposes to a "detached instance". A *true* detached instance
+  // (Right-click > Detach Instance) is structurally indistinguishable from
+  // any other FRAME once detached — its type simply stops being INSTANCE
+  // and every instance-specific field (including this one) disappears
+  // along with it, so there's no reliable way to flag that case from here
+  // or anywhere else in this extractor. See plugin/README.md and the PR
+  // description for the full explanation of this limitation.
+  if (node.getMainComponentAsync && !mainComponent) {
+    unresolved.push({
+      nodeId: node.id,
+      reason: "missing-main-component",
+      detail:
+        "This instance's main component could not be resolved (deleted, or in a library that isn't available).",
+    });
+  }
+
   const entry: ComponentMapEntry | null = findComponentMapEntry(figmaComponentSetName);
 
   const componentProperties = node.componentProperties ?? {};
