@@ -85,7 +85,7 @@ export interface Provenance {
    */
   fileKey: string;
   /**
-   * The Figma file version (or version id) the extraction was performed against.
+   * A version identifier for this extraction. The Figma Plugin API exposes no per-node revision counter, so producers typically derive this as a deterministic content hash of the extracted IR rather than a true Figma-side version (see the plugin's ir-export task / plugin/README.md 'Export versioning' section for the full rationale and limitations). Consumers should treat it as an opaque, comparable-for-equality identifier, not a parseable/ordered version number.
    */
   version: string;
   /**

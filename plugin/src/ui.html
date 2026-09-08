@@ -42,6 +42,7 @@
       .toolbar {
         display: flex;
         gap: 8px;
+        align-items: center;
         padding: 10px 12px;
         border-bottom: 1px solid #e0e0e0;
         flex: none;
@@ -63,6 +64,13 @@
       button:disabled {
         opacity: 0.5;
         cursor: default;
+      }
+      .copy-status {
+        font-size: 11px;
+        color: #1a7a3a;
+      }
+      .copy-status.error {
+        color: #b3261e;
       }
       main {
         flex: 1;
@@ -156,6 +164,8 @@
     <div class="toolbar">
       <button class="primary" id="extract-button">Extract</button>
       <button id="export-button" disabled>Export</button>
+      <button id="copy-button" disabled>Copy to clipboard</button>
+      <span id="copy-status" class="copy-status"></span>
     </div>
     <main>
       <div id="banner"></div>

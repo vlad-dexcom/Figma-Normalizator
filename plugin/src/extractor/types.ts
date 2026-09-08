@@ -137,5 +137,13 @@ export interface FigmaAPI {
 /** Deterministic extraction inputs that don't come off the node tree itself. */
 export interface ExtractionSource {
   fileKey: string;
-  version: string;
+  /**
+   * Optional literal override for `Provenance.version`. Production callers
+   * (`code.ts`) omit this: `extractSelection` then derives a deterministic
+   * content-hash version from the extracted IR itself (see
+   * `./versioning.ts`) and returns it as `ExtractionResult.version`. Tests
+   * that want a fixed, human-readable version string (e.g. fixture
+   * snapshots) may still pass one explicitly, which is used verbatim.
+   */
+  version?: string;
 }

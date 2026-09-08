@@ -163,5 +163,6 @@
       "reason": "unbound-literal",
       "detail": "Field \"paddingLeft\" has no bound variable; using raw literal value."
     }
-  ]
+  ],
+  "version": "1"
 }

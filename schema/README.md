@@ -87,8 +87,11 @@ guessed at.
 No timestamps, no random ids, no non-deterministic key/array ordering. This
 is why there is deliberately no top-level `generatedAt` (or similar) field
 anywhere in the schema — adding one would make this guarantee impossible to
-satisfy. This will be enforced by fixture/snapshot tests in a later task; the
-schema itself is designed so nothing in it could violate the guarantee.
+satisfy. This is enforced by the plugin's own fixture/snapshot and
+byte-identical-repeat-export tests (see `plugin/src/extractor/__tests__/
+determinism.test.ts` and the "Determinism guarantee" section of
+`plugin/README.md`); the schema itself is designed so nothing in it could
+violate the guarantee.
 
 ## Forward-compat plan: adding `symbol` later
 
