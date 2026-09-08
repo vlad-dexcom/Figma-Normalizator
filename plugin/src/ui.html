@@ -6,6 +6,44 @@
     <style>
       :root {
         color-scheme: light dark;
+        --bg: #ffffff;
+        --fg: #1a1a1a;
+        --muted: #888888;
+        --border: #e0e0e0;
+        --panel-bg: #fafafa;
+        --panel-border: #eeeeee;
+        --button-bg: #ffffff;
+        --button-fg: #1a1a1a;
+        --button-border: #d0d0d0;
+        --primary-bg: #18a0fb;
+        --primary-fg: #ffffff;
+        --primary-border: #18a0fb;
+        --banner-bg: #fff2e6;
+        --banner-border: #ffb066;
+        --banner-fg: #9a4d00;
+        --success: #1a7a3a;
+        --error: #b3261e;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #2c2c2c;
+          --fg: #ffffff;
+          --muted: #b3b3b3;
+          --border: #444444;
+          --panel-bg: #232323;
+          --panel-border: #3d3d3d;
+          --button-bg: #3d3d3d;
+          --button-fg: #ffffff;
+          --button-border: #555555;
+          --primary-bg: #18a0fb;
+          --primary-fg: #ffffff;
+          --primary-border: #18a0fb;
+          --banner-bg: #4a3315;
+          --banner-border: #cc8a33;
+          --banner-fg: #ffc178;
+          --success: #4cd97b;
+          --error: #ff6b60;
+        }
       }
       * {
         box-sizing: border-box;
@@ -17,18 +55,19 @@
           sans-serif;
         margin: 0;
         padding: 0;
-        color: #1a1a1a;
+        color: var(--fg);
+        background: var(--bg);
         display: flex;
         flex-direction: column;
         height: 100vh;
       }
       header {
         padding: 10px 12px;
-        border-bottom: 1px solid #e0e0e0;
+        border-bottom: 1px solid var(--border);
         flex: none;
       }
       header .label {
-        color: #888;
+        color: var(--muted);
         font-size: 10px;
         text-transform: uppercase;
         letter-spacing: 0.04em;
@@ -38,27 +77,29 @@
         font-weight: 600;
         margin-top: 2px;
         word-break: break-word;
+        color: var(--fg);
       }
       .toolbar {
         display: flex;
         gap: 8px;
         align-items: center;
         padding: 10px 12px;
-        border-bottom: 1px solid #e0e0e0;
+        border-bottom: 1px solid var(--border);
         flex: none;
       }
       button {
         font: inherit;
-        border: 1px solid #d0d0d0;
-        background: #fff;
+        border: 1px solid var(--button-border);
+        background: var(--button-bg);
+        color: var(--button-fg);
         border-radius: 6px;
         padding: 6px 12px;
         cursor: pointer;
       }
       button.primary {
-        background: #18a0fb;
-        border-color: #18a0fb;
-        color: #fff;
+        background: var(--primary-bg);
+        border-color: var(--primary-border);
+        color: var(--primary-fg);
         font-weight: 600;
       }
       button:disabled {
@@ -67,10 +108,10 @@
       }
       .copy-status {
         font-size: 11px;
-        color: #1a7a3a;
+        color: var(--success);
       }
       .copy-status.error {
-        color: #b3261e;
+        color: var(--error);
       }
       main {
         flex: 1;
@@ -84,14 +125,14 @@
         font-size: 11px;
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        color: #888;
+        color: var(--muted);
         margin: 0 0 6px;
       }
       #banner {
         display: none;
-        background: #fff2e6;
-        border: 1px solid #ffb066;
-        color: #9a4d00;
+        background: var(--banner-bg);
+        border: 1px solid var(--banner-border);
+        color: var(--banner-fg);
         border-radius: 6px;
         padding: 8px 10px;
         font-weight: 600;
@@ -108,10 +149,11 @@
           "SF Mono",
           Menlo,
           monospace;
-        border: 1px solid #e0e0e0;
+        border: 1px solid var(--border);
         border-radius: 6px;
         padding: 8px;
-        background: #fafafa;
+        background: var(--panel-bg);
+        color: var(--fg);
         white-space: pre;
         overflow: auto;
       }
@@ -121,6 +163,7 @@
       .warning-group-title {
         font-weight: 600;
         margin-bottom: 4px;
+        color: var(--fg);
       }
       .warning-entry {
         display: flex;
@@ -128,19 +171,20 @@
         justify-content: space-between;
         gap: 8px;
         padding: 6px 8px;
-        border: 1px solid #eee;
+        border: 1px solid var(--panel-border);
         border-radius: 6px;
         margin-bottom: 4px;
+        color: var(--fg);
       }
       .warning-entry .text {
         min-width: 0;
       }
       .warning-entry .detail {
-        color: #666;
+        color: var(--muted);
         margin-top: 2px;
       }
       .warning-entry .node-id {
-        color: #999;
+        color: var(--muted);
         font:
           10px ui-monospace,
           monospace;
@@ -151,7 +195,7 @@
       }
       #empty-warnings,
       #empty-ir {
-        color: #888;
+        color: var(--muted);
         font-style: italic;
       }
     </style>
