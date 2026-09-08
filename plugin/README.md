@@ -144,18 +144,36 @@ fully unit-testable without a DOM — see `src/ui/__tests__/clipboard.test.ts`.
 
 ### Warning reasons
 
-| Reason                   | Emitted by                | Meaning                                                                                                                                                                                                        |
-| ------------------------ | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `unbound-literal`        | extractor (`tokens.ts`)   | A color/spacing/typography value has no bound Figma variable/style.                                                                                                                                            |
-| `unmapped-variant`       | extractor (`instance.ts`) | A component's VARIANT property value has no `component-map.yaml` routing.                                                                                                                                      |
-| `unmapped-component`     | extractor (`instance.ts`) | A component set has no `component-map.yaml` entry (or no mapped Compose component) at all.                                                                                                                     |
-| `missing-main-component` | extractor (`instance.ts`) | An INSTANCE node whose main component couldn't be resolved (deleted, or in an unavailable library). See "Detached instances" below.                                                                            |
-| `absolute-positioning`   | extractor (`overlay.ts`)  | Children were grouped into an `overlay` node (absolutely positioned inside an Auto Layout parent). Structurally handled either way — this entry exists so it's also visible to designers in the warnings list. |
+| Reason                   | Emitted by                | Meaning                                                                                                                                                                                                                                      |
+| ------------------------ | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `unbound-literal`        | extractor (`tokens.ts`)   | A color/spacing/typography value has no bound Figma variable/style.                                                                                                                                                                          |
+| `unmapped-variant`       | extractor (`instance.ts`) | A component's VARIANT property value has no `component-map.yaml` routing.                                                                                                                                                                    |
+| `unmapped-component`     | extractor (`instance.ts`) | A component set has no `component-map.yaml` entry (or no mapped Compose component) at all. The instance's real children are still recursed into and extracted (see "Instance boundary" below) — this is a hygiene warning, not a truncation. |
+| `missing-main-component` | extractor (`instance.ts`) | An INSTANCE node whose main component couldn't be resolved (deleted, or in an unavailable library). See "Detached instances" below.                                                                                                          |
+| `absolute-positioning`   | extractor (`overlay.ts`)  | Children were grouped into an `overlay` node (absolutely positioned inside an Auto Layout parent). Structurally handled either way — this entry exists so it's also visible to designers in the warnings list.                               |
 
 Reasons above the line are extractor-emitted (present in `unresolved[]` in
 the IR itself); `absolute-positioning` was added in this task as a small,
 targeted extractor change (`overlay.ts`) specifically so the UI can surface
 it, per the plugin-validator-ui task description.
+
+### Instance boundary: opaque only when mapped
+
+An INSTANCE node is only treated as opaque (its own `instance` IR node,
+zero descended children) when it resolves to a real, mapped design-system
+composable — the whole point of that opacity is that the composable call
+is strictly better information than reconstructing its Figma-side internals
+(rectangles, text nodes, icons), which a consumer must not act on anyway.
+
+An **unmapped** instance (no `component-map.yaml` entry, or an entry that
+resolves to `status: unmapped`/no compose component) has no composable to
+protect, so there is no upside to stopping recursion there — it falls back
+to the same container-handling path a plain FRAME would take (`instance.ts`
+
+- `index.ts`), recursing into its real children (text, nested mapped
+  instances, assets, plain layout) instead of discarding them. The
+  `unmapped-component`/`missing-main-component` warning is still emitted for
+  the node so the hygiene signal isn't lost — only the truncation is fixed.
 
 ### Detached instances: a known limitation
 

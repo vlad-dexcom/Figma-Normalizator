@@ -187,6 +187,59 @@ async function buildLayoutNode(
   return { ir: layoutNode, unresolved };
 }
 
+/**
+ * Handles a container-like node (a plain FRAME/GROUP/etc., or — since an
+ * unmapped instance has no design-system composable to protect — an
+ * unmapped INSTANCE falling back to this same path): empty-and-no-auto-
+ * layout collapses to nothing, a single-child non-auto-layout wrapper is a
+ * transparent pass-through, and everything else becomes a real `layout`
+ * node with recursively-extracted children.
+ *
+ * Only reads structural fields common to both plain containers and
+ * instances (`layoutMode`, spacing/padding, `fills`, `cornerRadius`,
+ * `children`, sizing) — never instance-specific fields (`mainComponent`,
+ * `componentProperties`), so it's safe to call with an `INSTANCE` node.
+ */
+async function handleContainerLike(
+  figma: FigmaAPI,
+  node: FigmaNode,
+  parent: FigmaNode | undefined,
+  ctx: ProvenanceContext,
+  budget: NodeBudget,
+  source: ExtractionSource,
+  isTopLevel: boolean,
+): Promise<NodeResult> {
+  const children = node.children ?? [];
+
+  if (children.length === 0 && !hasAutoLayout(node)) {
+    // An empty, non-auto-layout frame carries no structural information.
+    return { ir: null, unresolved: [] };
+  }
+
+  if (children.length === 1 && !hasAutoLayout(node)) {
+    // Transparent wrapper: a plain frame around a single child adds no
+    // layout intent of its own — recurse straight through to the child
+    // rather than emitting a meaningless nested `layout` node. The
+    // wrapper's own name is still pushed onto the ancestor path (see
+    // provenance.ts) so identity/traceability through re-exports isn't
+    // affected by whether we chose to emit an IR node for it.
+    const onlyChild = children[0];
+    if (onlyChild) {
+      return extractNode(
+        figma,
+        onlyChild,
+        node,
+        withDescendant(ctx, node),
+        budget,
+        source,
+        isTopLevel,
+      );
+    }
+  }
+
+  return buildLayoutNode(figma, node, parent, ctx, budget, source);
+}
+
 async function extractNode(
   figma: FigmaAPI,
   node: FigmaNode,
@@ -208,7 +261,29 @@ async function extractNode(
 
   if (node.type === "INSTANCE") {
     const result = await buildInstanceNode(node, parent, ctx);
-    return { ir: result.node, unresolved: result.unresolved };
+    if (result.kind === "mapped") {
+      return { ir: result.node, unresolved: result.unresolved };
+    }
+    // Unmapped: no design-system composable to protect, so fall back to
+    // the same container-handling path a plain FRAME would take — this
+    // surfaces the instance's real content (text, nested mapped
+    // instances, assets, plain layout) instead of a dead-end node. The
+    // unmapped-component/missing-main-component warning(s) already
+    // computed above are preserved and merged with whatever the recursed
+    // children additionally surface.
+    const containerResult = await handleContainerLike(
+      figma,
+      node,
+      parent,
+      ctx,
+      budget,
+      source,
+      isTopLevel,
+    );
+    return {
+      ir: containerResult.ir,
+      unresolved: [...result.unresolved, ...containerResult.unresolved],
+    };
   }
 
   if (node.type === "TEXT") {
@@ -217,35 +292,7 @@ async function extractNode(
   }
 
   if (CONTAINER_TYPES.has(node.type)) {
-    const children = node.children ?? [];
-
-    if (children.length === 0 && !hasAutoLayout(node)) {
-      // An empty, non-auto-layout frame carries no structural information.
-      return { ir: null, unresolved: [] };
-    }
-
-    if (children.length === 1 && !hasAutoLayout(node)) {
-      // Transparent wrapper: a plain frame around a single child adds no
-      // layout intent of its own — recurse straight through to the child
-      // rather than emitting a meaningless nested `layout` node. The
-      // wrapper's own name is still pushed onto the ancestor path (see
-      // provenance.ts) so identity/traceability through re-exports isn't
-      // affected by whether we chose to emit an IR node for it.
-      const onlyChild = children[0];
-      if (onlyChild) {
-        return extractNode(
-          figma,
-          onlyChild,
-          node,
-          withDescendant(ctx, node),
-          budget,
-          source,
-          isTopLevel,
-        );
-      }
-    }
-
-    return buildLayoutNode(figma, node, parent, ctx, budget, source);
+    return handleContainerLike(figma, node, parent, ctx, budget, source, isTopLevel);
   }
 
   // Unknown/unsupported node type (e.g. a stray SLICE or an unrecognized

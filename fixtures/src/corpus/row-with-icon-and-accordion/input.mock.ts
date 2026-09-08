@@ -17,6 +17,15 @@
 // worth a follow-up look (see PR description) but isn't fixed here.
 // Accordions' entry has `compose: null`, so it genuinely exercises the
 // unmapped-component path.
+//
+// This `accordion` instance is built with no `children` on purpose: an
+// unmapped instance now falls back to the same container-handling rules as
+// a plain FRAME (see plugin/src/extractor/instance.ts), so with zero
+// children and no auto layout it collapses to nothing in the tree — only
+// its `unmapped-component` UnresolvedEntry survives in the flattened
+// `unresolved[]` list. See `unmapped-instance-recursion.test.ts` in
+// `plugin/src/extractor/__tests__/` for the case where an unmapped instance
+// *does* have real children and they're recursed into instead of discarded.
 import {
   mockComponent,
   mockComponentSet,

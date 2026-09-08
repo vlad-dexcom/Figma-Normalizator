@@ -1,7 +1,15 @@
 // Instance resolution: maps a Figma component instance to a design-system
-// component + resolved props/slots via mappings/component-map.yaml, and
-// stops recursion at the instance boundary. See concern #4 in the
-// plugin-extractor task description.
+// component + resolved props/slots via mappings/component-map.yaml. See
+// concern #4 in the plugin-extractor task description.
+//
+// Only a *mapped* instance stops recursion at its boundary (opaque —
+// its own composable call is strictly better information than its Figma
+// internals). An *unmapped* instance (no component-map entry, or an entry
+// resolved to `status: unmapped`/no compose component) has no design-system
+// composable to protect, so the caller (`index.ts`'s `extractNode`) falls
+// back to the same container-handling path a plain FRAME would take,
+// recursing into the instance's real children instead of discarding them.
+// See `InstanceBuildResult` below.
 import type {
   InstanceNode as IRInstanceNode,
   PropValue,
@@ -62,11 +70,26 @@ function buildInstanceLayoutFields(node: FigmaNode, parent: FigmaNode | undefine
   return partial;
 }
 
+/**
+ * Result of resolving a Figma INSTANCE node against component-map.yaml.
+ *
+ * - `mapped`: a real design-system composable covers this subtree — `node`
+ *   is the opaque `instance` IR node (no descended children).
+ * - `unmapped`: no composable to protect; the caller should discard this
+ *   result's (nonexistent) `node` and instead recurse into the instance's
+ *   real children via the same container-handling path a plain FRAME
+ *   takes. `unresolved` still carries the `unmapped-component`/
+ *   `missing-main-component` entries so the warning isn't lost.
+ */
+export type InstanceBuildResult =
+  | { kind: "mapped"; node: IRInstanceNode; unresolved: UnresolvedEntry[] }
+  | { kind: "unmapped"; unresolved: UnresolvedEntry[] };
+
 export async function buildInstanceNode(
   node: FigmaNode,
   parent: FigmaNode | undefined,
   ctx: ProvenanceContext,
-): Promise<{ node: IRInstanceNode; unresolved: UnresolvedEntry[] }> {
+): Promise<InstanceBuildResult> {
   const unresolved: UnresolvedEntry[] = [];
 
   const mainComponent = node.getMainComponentAsync ? await node.getMainComponentAsync() : null;
@@ -126,6 +149,15 @@ export async function buildInstanceNode(
         entry.reason ??
         `Figma component set "${figmaComponentSetName}" has no Compose component mapped yet.`,
     });
+  }
+
+  if (!isMapped) {
+    // No design-system composable to protect here — don't bother building
+    // props/slots for a node we're about to discard in favor of recursing
+    // into its real children (they'll produce their own, more accurate IR,
+    // e.g. a real extracted `text` node instead of a flat `props.text`
+    // string). The caller falls back to container-handling for this node.
+    return { kind: "unmapped", unresolved };
   }
 
   const props: Record<string, PropValue> = {};
@@ -189,6 +221,7 @@ export async function buildInstanceNode(
   }
 
   return {
+    kind: "mapped",
     node: {
       kind: "instance",
       component,
