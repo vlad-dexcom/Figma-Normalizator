@@ -102,7 +102,14 @@ export async function buildInstanceNode(
   }
 
   const routedEntry = entry ? resolveRouting(entry, variantRawValues) : null;
-  const component = routedEntry?.compose?.component ?? null;
+  // `status` is the authoritative mapped/unmapped signal (see
+  // mappings/README.md). An entry's `compose` block can be populated even
+  // when `status: unmapped` (e.g. Checkbox/Radio Button record a "someday"
+  // target Compose component name for documentation purposes even though
+  // no standalone Figma component set exists yet) — that must NOT be read
+  // as a resolved mapping.
+  const isMapped = routedEntry?.status === "mapped";
+  const component = isMapped ? (routedEntry?.compose?.component ?? null) : null;
 
   if (!entry) {
     unresolved.push({
@@ -110,11 +117,12 @@ export async function buildInstanceNode(
       reason: "unmapped-component",
       detail: `No component-map entry exists for Figma component set "${figmaComponentSetName}".`,
     });
-  } else if (!routedEntry?.compose) {
+  } else if (!isMapped || !routedEntry?.compose) {
     unresolved.push({
       nodeId: node.id,
       reason: "unmapped-component",
       detail:
+        routedEntry?.reason ??
         entry.reason ??
         `Figma component set "${figmaComponentSetName}" has no Compose component mapped yet.`,
     });
