@@ -3,7 +3,7 @@
 // are grouped into a single `overlay` node injected into the children array
 // at the position they'd otherwise start. See concern #7 in the
 // plugin-extractor task description.
-import type { IRNode, OverlayNode } from "@figma-normalizator/schema";
+import type { IRNode, OverlayNode, UnresolvedEntry } from "@figma-normalizator/schema";
 import type { FigmaNode } from "./types.js";
 import type { ProvenanceContext } from "./provenance.js";
 import type { OrderedChild } from "./list.js";
@@ -42,17 +42,28 @@ export function computeOverlayAlign(
   };
 }
 
+export interface OverlayGroupingResult {
+  children: IRNode[];
+  unresolved: UnresolvedEntry[];
+}
+
 /**
  * Reorders `items` (in original sibling order) so that absolutely-positioned
  * children are collapsed into a single trailing-`overlay` node injected at
  * the index where the first absolute child appeared, while normally-flowed
  * children keep their relative order untouched.
+ *
+ * Absolute positioning inside Auto Layout is structurally handled either
+ * way (via the `overlay` node), but designers should still see it called
+ * out as a hygiene item — so grouping any children this way also pushes an
+ * `unresolved` entry with reason "absolute-positioning" for the parent, for
+ * the UI's warnings list to surface.
  */
 export function groupOverlayChildren(
   parent: FigmaNode,
   items: readonly OrderedChild[],
   ctx: ProvenanceContext,
-): IRNode[] {
+): OverlayGroupingResult {
   const normal: IRNode[] = [];
   const overlayChildren: OverlayNode["children"] = [];
   let insertAt = -1;
@@ -71,7 +82,7 @@ export function groupOverlayChildren(
   }
 
   if (overlayChildren.length === 0) {
-    return normal;
+    return { children: normal, unresolved: [] };
   }
 
   const overlayNode: OverlayNode = {
@@ -87,5 +98,14 @@ export function groupOverlayChildren(
     },
   };
 
-  return [...normal.slice(0, insertAt), overlayNode, ...normal.slice(insertAt)];
+  return {
+    children: [...normal.slice(0, insertAt), overlayNode, ...normal.slice(insertAt)],
+    unresolved: [
+      {
+        nodeId: parent.id,
+        reason: "absolute-positioning",
+        detail: `${overlayChildren.length} absolutely-positioned child/children inside Auto Layout parent "${parent.name}".`,
+      },
+    ],
+  };
 }

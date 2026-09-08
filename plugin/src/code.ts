@@ -2,11 +2,17 @@
 // Figma's plugin sandbox, not the UI iframe). Bundled by esbuild into
 // `dist/code.js`, which `manifest.json`'s `main` field points at.
 //
-// Runs the extractor (`./extractor`) against the current selection and
-// posts the resulting IR JSON to the UI. There's no real validator UI yet
-// (that's a separate later task, `plugin-validator-ui`) — `figma.notify` and
-// a `postMessage` are enough to prove the extractor runs end to end.
-import { extractSelection, type ExtractionResult, type FigmaNode } from "./extractor/index.js";
+// Keeps the panel (`ui.ts`/`ui.html`) open for the whole session rather than
+// running once and closing: it forwards selection changes to the UI, and
+// handles `extract`/`select-node`/`export` messages from it (see
+// `./messages.ts` for the full protocol both sides share).
+import {
+  extractSelection,
+  NodeBudgetExceededError,
+  type ExtractionResult,
+  type FigmaNode,
+} from "./extractor/index.js";
+import type { PluginToUIMessage, SelectionSummary, UIToPluginMessage } from "./messages.js";
 
 /** The minimal slice of the real Figma plugin API this entry point depends on. */
 export interface ExtractFigmaAPI {
@@ -19,45 +25,148 @@ export interface ExtractFigmaAPI {
   notify(message: string): void;
   showUI(html: string, options?: { visible?: boolean; width?: number; height?: number }): void;
   closePlugin(message?: string): void;
-  ui: { postMessage(message: unknown): void };
+  ui: {
+    postMessage(message: PluginToUIMessage): void;
+    on(event: "message", callback: (message: UIToPluginMessage) => void): void;
+  };
+  on(event: "selectionchange", callback: () => void): void;
+  getNodeByIdAsync?(id: string): Promise<FigmaNode | null>;
+  viewport?: { scrollAndZoomIntoView(nodes: readonly FigmaNode[]): void };
+}
+
+const IR_VERSION = "1";
+
+function describeSelection(selection: readonly FigmaNode[]): SelectionSummary {
+  const node = selection[0];
+  return {
+    nodeId: node?.id ?? null,
+    name: node?.name ?? null,
+    nodeType: node?.type ?? null,
+  };
+}
+
+function postSelectionChanged(api: ExtractFigmaAPI, selection: readonly FigmaNode[]): void {
+  api.ui.postMessage({ type: "selection-changed", ...describeSelection(selection) });
 }
 
 /**
- * Extracts the current selection to IR and posts it to the UI.
- *
- * Exported (rather than run as a side effect of module load) so it can be
- * exercised by the headless test harness without a real `figma` global.
+ * Runs the extractor against the current selection and posts either an
+ * `ir-result` or a descriptive `error` back to the UI. Never throws:
+ * `extractSelection`'s only expected failure mode (`NodeBudgetExceededError`,
+ * see extractor/budget.ts) is turned into a visible error rather than an
+ * uncaught rejection, and any other unexpected error is reported too rather
+ * than silently swallowed.
  */
-export async function runExtractCommand(api: ExtractFigmaAPI): Promise<void> {
+async function handleExtract(api: ExtractFigmaAPI): Promise<void> {
   const selection = api.currentPage.selection;
 
   if (selection.length === 0) {
-    api.notify("Figma Normalizator: select at least one layer to extract.");
-    api.closePlugin();
+    api.ui.postMessage({
+      type: "error",
+      message: "Select at least one layer to extract.",
+      code: "empty-selection",
+    });
     return;
   }
 
-  // `variables` is typed loosely on `ExtractFigmaAPI` above (to keep this
-  // file's own API surface small); `extractSelection` wants the narrower
-  // shape it actually calls. Real Figma's `variables` API is a structural
-  // superset of what we need here.
-  const result: ExtractionResult = await extractSelection(
-    { variables: api.variables as unknown as Parameters<typeof extractSelection>[0]["variables"] },
-    selection,
-    { fileKey: api.fileKey ?? "", version: "1" },
-  );
+  try {
+    // `variables` is typed loosely on `ExtractFigmaAPI` above (to keep this
+    // file's own API surface small); `extractSelection` wants the narrower
+    // shape it actually calls. Real Figma's `variables` API is a structural
+    // superset of what we need here.
+    const result: ExtractionResult = await extractSelection(
+      {
+        variables: api.variables as unknown as Parameters<typeof extractSelection>[0]["variables"],
+      },
+      selection,
+      { fileKey: api.fileKey ?? "", version: IR_VERSION },
+    );
 
+    api.ui.postMessage({
+      type: "ir-result",
+      ir: result,
+      source: {
+        fileKey: api.fileKey ?? "",
+        nodeId: selection[0]?.id ?? "",
+        version: IR_VERSION,
+      },
+    });
+  } catch (error) {
+    if (error instanceof NodeBudgetExceededError) {
+      api.ui.postMessage({ type: "error", message: error.message, code: "budget-exceeded" });
+      return;
+    }
+    const message = error instanceof Error ? error.message : "Unknown error during extraction.";
+    api.ui.postMessage({ type: "error", message, code: "unknown" });
+  }
+}
+
+/** Re-selects and scrolls to a node by id, so a designer can click a warning and jump to it on the canvas. */
+async function handleSelectNode(api: ExtractFigmaAPI, nodeId: string): Promise<void> {
+  if (!api.getNodeByIdAsync) {
+    api.ui.postMessage({
+      type: "error",
+      message: "This Figma version cannot look up nodes by id.",
+      code: "unsupported",
+    });
+    return;
+  }
+
+  const node = await api.getNodeByIdAsync(nodeId);
+  if (!node) {
+    api.ui.postMessage({
+      type: "error",
+      message: `Node ${nodeId} no longer exists in this document.`,
+      code: "node-not-found",
+    });
+    return;
+  }
+
+  api.currentPage.selection = [node];
+  api.viewport?.scrollAndZoomIntoView([node]);
+  postSelectionChanged(api, [node]);
+}
+
+/**
+ * The IR JSON is written to disk by the UI itself (only it has DOM access
+ * to build a Blob + trigger an anchor download) — this hook just lets the
+ * plugin-sandbox side observe that an export happened, and gives the later
+ * `ir-export` task a place to extend export behavior without touching
+ * `ui.ts`.
+ */
+function handleExport(api: ExtractFigmaAPI): void {
+  api.notify("Figma Normalizator: IR exported.");
+}
+
+export async function handleUIMessage(
+  api: ExtractFigmaAPI,
+  message: UIToPluginMessage,
+): Promise<void> {
+  switch (message.type) {
+    case "extract":
+      await handleExtract(api);
+      return;
+    case "select-node":
+      await handleSelectNode(api, message.nodeId);
+      return;
+    case "export":
+      handleExport(api);
+      return;
+  }
+}
+
+/** Wires up the persistent panel: shows the UI, and forwards selection/message events to it. */
+export function initializePlugin(api: ExtractFigmaAPI): void {
   // `__html__` is an ambient global populated by Figma at runtime from
   // manifest.json's `ui` field (see @figma/plugin-typings). It doesn't
   // exist in the headless test environment, so guard with `typeof` rather
   // than referencing it directly (which would throw a ReferenceError).
   const html = typeof __html__ !== "undefined" ? __html__ : "";
-  api.showUI(html, { visible: false, width: 240, height: 120 });
-  api.ui.postMessage({ type: "figma-normalizator/ir", ir: result });
-  api.notify(
-    `Figma Normalizator: extracted ${result.nodes.length} node(s), ${result.unresolved.length} unresolved.`,
-  );
-  api.closePlugin("Figma Normalizator: extraction complete");
+  api.showUI(html, { width: 360, height: 560 });
+
+  postSelectionChanged(api, api.currentPage.selection);
+  api.on("selectionchange", () => postSelectionChanged(api, api.currentPage.selection));
+  api.ui.on("message", (message) => void handleUIMessage(api, message));
 }
 
 // Only invoke against the real Figma sandbox when one is present (i.e. not
@@ -66,5 +175,5 @@ if (typeof figma !== "undefined") {
   // Real Figma nodes are a structural superset of this module's `FigmaNode`
   // (see extractor/types.ts) — this is the one place the plugin sandbox API
   // meets the extractor's narrower, more testable node shape.
-  void runExtractCommand(figma as unknown as ExtractFigmaAPI);
+  initializePlugin(figma as unknown as ExtractFigmaAPI);
 }

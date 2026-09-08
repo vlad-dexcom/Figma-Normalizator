@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "types": ["@figma/plugin-typings"]
   },
   "include": ["src"]

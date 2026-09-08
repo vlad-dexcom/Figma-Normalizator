@@ -151,7 +151,9 @@ async function buildLayoutNode(
   }
 
   const collapsed = collapseLists(childItems, childCtx);
-  const children = groupOverlayChildren(node, collapsed, childCtx);
+  const overlayResult = groupOverlayChildren(node, collapsed, childCtx);
+  const children = overlayResult.children;
+  unresolved.push(...overlayResult.unresolved);
 
   const layoutNode: LayoutNode = {
     kind: "layout",
