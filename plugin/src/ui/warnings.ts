@@ -13,6 +13,10 @@ import type { UnresolvedEntry } from "@figma-normalizator/schema";
  * Provenance of each reason:
  *  - "unbound-literal": extractor (tokens.ts) — a color/spacing/typography
  *    value with no bound Figma variable/style.
+ *  - "unresolvable-alias-chain": extractor (tokens.ts) — a bound Figma
+ *    variable's value is a VARIABLE_ALIAS chain that is circular, or
+ *    exceeds the max alias-hop depth, and so could not be followed to a
+ *    literal value.
  *  - "unmapped-variant": extractor (instance.ts) — a VARIANT property value
  *    with no component-map.yaml routing.
  *  - "unmapped-component": extractor (instance.ts) — a component set with no
@@ -41,6 +45,7 @@ import type { UnresolvedEntry } from "@figma-normalizator/schema";
  */
 const REASON_LABELS: Record<string, string> = {
   "unbound-literal": "Unbound literal value",
+  "unresolvable-alias-chain": "Unresolvable variable alias chain",
   "unmapped-variant": "Unmapped variant",
   "unmapped-component": "Unmapped component",
   "missing-main-component": "Missing main component",
