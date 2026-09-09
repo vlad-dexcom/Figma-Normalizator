@@ -98,6 +98,53 @@ never does; it always uses the computed content hash.
 not an incidental implementation detail — flagged here explicitly for
 review**, since there's no perfect answer available.
 
+## Variable alias resolution
+
+A Figma Variable's value for a given mode is not always a literal
+(number/string/color) — it is very commonly a `VARIABLE_ALIAS` pointing at
+_another_ variable instead. This is exactly how semantic tokens are built
+on top of primitive/palette tokens in most design systems (e.g.
+`color/surface/tone/emphasis` aliasing `color/palette/blue/500`), and
+`resolveVariable` (`src/extractor/tokens.ts`) must follow that pointer to
+produce a real value rather than stringifying the alias object itself.
+
+- **Aliases are followed recursively, not just one hop.** A semantic token
+  may alias another semantic token, which aliases a primitive — `resolveVariable`
+  keeps following `VARIABLE_ALIAS` values until it lands on a literal.
+- **The token path emitted is always the outermost (semantic) variable's
+  name**, never the primitive it happens to resolve through. A consumer of
+  the exported IR references `color/surface/tone/emphasis`, not
+  `color/palette/blue/500` — the alias chain is purely an implementation
+  detail of how that value was authored in Figma.
+- **Cross-collection mode matching (a real design decision with more than
+  one reasonable answer, flagged here for review — see "Export
+  versioning" above for how thoroughly we try to document these):** Figma
+  allows an alias target to live in a _different_ variable collection with
+  a _different_ set of modes than the aliasing variable. When resolving
+  variable A's "dark" mode value, which is an alias to variable B, B's own
+  collection might not have a mode named "dark" at all (e.g. B's
+  collection only has a single "value" mode, or uses different mode
+  names). In that case we fall back to **B's own default mode value**
+  rather than producing `undefined`/an empty value. We chose this over the
+  alternatives (erroring, or picking B's first mode arbitrarily) because
+  "the value the design system intends when no more specific mode
+  applies" is exactly what a variable's default mode already means within
+  its own collection — but a strict Figma Variables API consumer could
+  reasonably argue for surfacing this as an explicit warning instead of
+  silently falling back. Reviewers: if you disagree with this choice,
+  flag it and we can add an `UnresolvedEntry` for the fallback case too.
+- **Cycle/depth guard:** a circular alias chain (A aliases B aliases A) or
+  a pathologically deep one in a malformed Figma file could otherwise hang
+  the plugin sandbox in an infinite loop. `resolveVariable` tracks visited
+  variable ids and hop depth, and gives up after 10 hops or on detecting a
+  revisited id — 10 is far beyond any real design-token chain (semantic ->
+  semantic -> primitive is 2 hops), so hitting it is a strong signal of a
+  cycle. When the guard trips, the field resolves to `{ token: null, value:
+<raw literal> }` plus an `unresolvable-alias-chain` `UnresolvedEntry`
+  (see "Warning reasons" below), the same `unresolved[]`-channel philosophy
+  already used for `unbound-literal`/`mixed-value`/etc — never a silently
+  dropped or invented value.
+
 ## Determinism guarantee
 
 **Exporting the same, unchanged selection twice MUST produce byte-identical
@@ -154,6 +201,7 @@ fully unit-testable without a DOM — see `src/ui/__tests__/clipboard.test.ts`.
 | Reason                            | Emitted by                                           | Meaning                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | --------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `unbound-literal`                 | extractor (`tokens.ts`)                              | A color/spacing/typography value has no bound Figma variable/style.                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `unresolvable-alias-chain`        | extractor (`tokens.ts`)                              | A bound variable's value is a `VARIABLE_ALIAS` chain that is circular, or exceeds the max alias-hop depth (10), so it could not be followed to a literal value. See "Variable alias resolution" above.                                                                                                                                                                                                                                                                                                                        |
 | `unmapped-variant`                | extractor (`instance.ts`)                            | A component's VARIANT property value has no `component-map.yaml` routing.                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `unmapped-component`              | extractor (`instance.ts`)                            | A component set has no `component-map.yaml` entry (or no mapped Compose component) at all. The instance's real children are still recursed into and extracted (see "Instance boundary" below) — this is a hygiene warning, not a truncation.                                                                                                                                                                                                                                                                                  |
 | `missing-main-component`          | extractor (`instance.ts`)                            | An INSTANCE node whose main component couldn't be resolved (deleted, or in an unavailable library). See "Detached instances" below.                                                                                                                                                                                                                                                                                                                                                                                           |
