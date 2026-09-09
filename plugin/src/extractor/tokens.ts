@@ -4,6 +4,7 @@
 // UnresolvedEntry with reason "unbound-literal" when there's no bound
 // variable. See concern #3 in the plugin-extractor task description.
 import type { TokenValue, TokenRef, UnresolvedEntry } from "@figma-normalizator/schema";
+import { findTokenSymbol } from "@figma-normalizator/mappings";
 import type { FigmaAPI, FigmaPaint, VariableAliasBinding } from "./types.js";
 import { isMixed } from "./mixed.js";
 
@@ -156,14 +157,31 @@ async function resolveModeValue(
 
 /**
  * Resolves a single bound variable id to a `TokenValue`-shaped
- * `{ token, value, modes? }`, reading `variable.name` verbatim as the token
- * path (Figma variable names already use `/` as a path separator) and
- * `valuesByMode` + the owning collection's mode names for `modes`.
+ * `{ token, value, modes?, symbol? }`, reading `variable.name` verbatim as
+ * the token path (Figma variable names already use `/` as a path
+ * separator) and `valuesByMode` + the owning collection's mode names for
+ * `modes`.
+ *
+ * `symbol` is looked up from the bundled Figma-token -> Kotlin-symbol map
+ * (`@figma-normalizator/mappings`'s `findTokenSymbol`, see
+ * `plugin/README.md`'s "Symbol resolution (token-map)" section) against
+ * this exact `token` path — the outer/semantic variable's own name, never
+ * an inner primitive it aliases through, since alias resolution above only
+ * ever affects `value`/`modes`, not the `token` this function returns. When
+ * the bundled map has no confirmed symbol for this path (most tokens
+ * today — see mappings/token-map/README.md), `symbol` is simply omitted;
+ * this is the expected, unremarkable default, not a hygiene issue, so no
+ * `UnresolvedEntry` is raised for it.
  */
 export async function resolveVariable(
   figma: FigmaAPI,
   variableId: string,
-): Promise<{ token: string; value: string | number; modes?: Record<string, string | number> }> {
+): Promise<{
+  token: string;
+  value: string | number;
+  modes?: Record<string, string | number>;
+  symbol?: string;
+}> {
   const variable = await figma.variables.getVariableByIdAsync(variableId);
   if (!variable) {
     // A bound variable id that no longer resolves (deleted/inaccessible
@@ -200,6 +218,7 @@ export async function resolveVariable(
     token: variable.name,
     value,
     modes: modeNames.length > 1 ? modes : undefined,
+    symbol: findTokenSymbol(variable.name),
   };
 }
 
@@ -330,7 +349,7 @@ export async function resolveTypographyToken(
   }
   try {
     const resolved = await resolveVariable(figma, variableId);
-    return { token: { token: resolved.token }, unresolved: [] };
+    return { token: { token: resolved.token, symbol: resolved.symbol }, unresolved: [] };
   } catch (error) {
     if (error instanceof UnresolvableAliasChainError) {
       return {

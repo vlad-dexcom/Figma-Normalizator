@@ -54,3 +54,19 @@ export interface ComponentMap {
   figma: { fileKey: string; fileName: string };
   entries: ComponentMapEntry[];
 }
+
+/**
+ * One entry of the bundled token-map lookup table
+ * (`src/generated/token-map.json`): a Figma variable path (the same string
+ * `TokenValue.token`/`TokenRef.token` carry) paired with its confirmed
+ * Kotlin design-system symbol. Trimmed from the full
+ * `mappings/token-map/*.token-map.json` entry shape (documented in
+ * `mappings/token-map/README.md`) down to just the two fields the plugin
+ * extractor needs — see `mappings/scripts/bundle-token-map-lib.mjs`'s header
+ * comment for why entries with a null `symbol` are dropped entirely rather
+ * than carried through as `symbol: null`.
+ */
+export interface TokenMapBundleEntry {
+  path: string;
+  symbol: string;
+}
