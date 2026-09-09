@@ -32,6 +32,41 @@ function stripSuffix(rawName: string): string {
 }
 
 /**
+ * Result of a guarded `node.componentProperties` read (see
+ * `safeReadComponentProperties` below).
+ */
+export interface ComponentPropertiesReadResult {
+  properties: Record<string, FigmaComponentPropertyValue>;
+  /** The original error message, if the read threw; `null` on success. */
+  readError: string | null;
+  /** Whether the node had a `componentProperties` value at all (i.e. `node.componentProperties` was truthy) when the read succeeded. `false` when the read threw, since nothing meaningful could be observed. */
+  hadProperty: boolean;
+}
+
+/**
+ * `node.componentProperties` is a *getter* in Figma's real plugin API, not
+ * a plain data field — it can throw synchronously when the underlying
+ * component set has broken/conflicting variant property definitions in the
+ * Figma file itself (e.g. duplicate or inconsistent variant names within
+ * that component set). That's a data-integrity issue in the design file,
+ * not something this plugin can fix, but it must never be allowed to
+ * propagate and take down extraction of the rest of the tree (same
+ * "never truncate the whole tree for one bad node" philosophy as the
+ * unmapped-instance-recursion fix). Every call site that reads
+ * `componentProperties` should go through this helper rather than
+ * duplicating the try/catch.
+ */
+export function safeReadComponentProperties(node: FigmaNode): ComponentPropertiesReadResult {
+  try {
+    const value = node.componentProperties;
+    return { properties: value ?? {}, readError: null, hadProperty: Boolean(value) };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { properties: {}, readError: message, hadProperty: false };
+  }
+}
+
+/**
  * Converts a raw Figma property name (which may start with emoji/punctuation,
  * e.g. "✏️ CTA Label") into a camelCase compose parameter name, e.g.
  * "leadingIcon", "hasLabel". Used for TEXT/BOOLEAN/INSTANCE_SWAP properties,
@@ -79,7 +114,8 @@ function buildInstanceLayoutFields(node: FigmaNode, parent: FigmaNode | undefine
  *   result's (nonexistent) `node` and instead recurse into the instance's
  *   real children via the same container-handling path a plain FRAME
  *   takes. `unresolved` still carries the `unmapped-component`/
- *   `missing-main-component` entries so the warning isn't lost.
+ *   `missing-main-component`/`unreadable-component-properties` entries so
+ *   the warning isn't lost.
  */
 export type InstanceBuildResult =
   | { kind: "mapped"; node: IRInstanceNode; unresolved: UnresolvedEntry[] }
@@ -116,7 +152,23 @@ export async function buildInstanceNode(
 
   const entry: ComponentMapEntry | null = findComponentMapEntry(figmaComponentSetName);
 
-  const componentProperties = node.componentProperties ?? {};
+  const { properties: componentProperties, readError } = safeReadComponentProperties(node);
+  if (readError) {
+    // The component set backing this instance has broken/conflicting
+    // variant definitions in the Figma file itself — not fixable from
+    // here. Same fallback as any other unmapped instance: no design-system
+    // composable to protect, so recurse into the instance's real children
+    // via the container-handling path instead of discarding the subtree.
+    unresolved.push({
+      nodeId: node.id,
+      reason: "unreadable-component-properties",
+      detail:
+        `Figma could not read this instance's component properties (component set "${figmaComponentSetName}"): ${readError}. ` +
+        "This is a data-integrity issue in the Figma file's component set (e.g. duplicate/conflicting variant definitions), not a plugin bug — fix it in Figma (Assets panel → find and repair/republish the component set).",
+    });
+    return { kind: "unmapped", unresolved };
+  }
+
   const variantRawValues: Record<string, string> = {};
   for (const [rawName, prop] of Object.entries(componentProperties)) {
     if (prop.type === "VARIANT") {

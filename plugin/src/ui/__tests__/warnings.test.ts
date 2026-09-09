@@ -7,6 +7,9 @@ describe("labelForReason", () => {
     expect(labelForReason("unmapped-variant")).toBe("Unmapped variant");
     expect(labelForReason("unmapped-component")).toBe("Unmapped component");
     expect(labelForReason("missing-main-component")).toBe("Missing main component");
+    expect(labelForReason("unreadable-component-properties")).toBe(
+      "Unreadable component properties",
+    );
     expect(labelForReason("absolute-positioning")).toBe("Absolute positioning inside Auto Layout");
   });
 

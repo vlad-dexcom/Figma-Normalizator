@@ -5,8 +5,11 @@
 import type { IRNode, ListNode } from "@figma-normalizator/schema";
 import type { FigmaNode } from "./types.js";
 import { buildProvenance, type ProvenanceContext } from "./provenance.js";
+import { safeReadComponentProperties } from "./instance.js";
 
 const MIN_RUN_LENGTH = 3;
+
+let unreadableSignatureCounter = 0;
 
 /**
  * A deterministic structural signature for a node, deliberately excluding
@@ -17,14 +20,35 @@ const MIN_RUN_LENGTH = 3;
  * component" — two instances of the same component set expose the same
  * property names, without needing an async `getMainComponentAsync` lookup
  * just to compare structure.
+ *
+ * `node.componentProperties` is a getter that can throw (see
+ * `safeReadComponentProperties` in `instance.ts`) when its component set
+ * has broken/conflicting variant definitions in the Figma file itself. If
+ * that happens, this node's `componentPropertyNames` is set to a freshly
+ * unique marker instead of the (unreadable) property names — this fails
+ * safe to "not structurally identical to any other node, including
+ * another node that also failed to read" rather than letting the
+ * exception propagate and crash the whole list-collapsing pass for every
+ * sibling. A plain incrementing counter (rather than reusing `undefined`
+ * or omitting the field) guarantees no accidental match even against
+ * another broken sibling with an otherwise-identical shape.
  */
 function structuralSignature(node: FigmaNode): unknown {
+  const { properties, readError, hadProperty } = safeReadComponentProperties(node);
+  unreadableSignatureCounter += 1;
   return {
     type: node.type,
     layoutMode: node.layoutMode,
-    componentPropertyNames: node.componentProperties
-      ? Object.keys(node.componentProperties).sort()
-      : undefined,
+    // Note: intentionally reads via the already-captured `properties`/
+    // `hadProperty` result rather than `node.componentProperties`
+    // directly — the latter is the throwing getter, and re-accessing it
+    // here (even just to check truthiness) would re-throw for a broken
+    // component set.
+    componentPropertyNames: readError
+      ? `__unreadable-component-properties-${unreadableSignatureCounter}__`
+      : hadProperty
+        ? Object.keys(properties).sort()
+        : undefined,
     children: (node.children ?? []).map(structuralSignature),
   };
 }
