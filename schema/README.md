@@ -110,6 +110,18 @@ To make that additive rather than breaking:
   side, since the generated `TokenValue`/`TokenRef` TypeScript types already
   include `symbol?: string`).
 
+**Update: this "later stage" has now happened, partially.** The plugin
+extractor (`plugin/src/extractor/tokens.ts`'s `resolveVariable`) looks up
+each resolved token's path against a bundled Figma-token -> Kotlin-symbol
+map (`mappings/token-map/`, wired in via `@figma-normalizator/mappings`'s
+`findTokenSymbol`) and populates `TokenValue.symbol`/`TokenRef.symbol` when
+a confirmed mapping exists. As of this snapshot that's only the `base`
+collection's `color` branch (246 of 2,371 known tokens) — every other token
+still resolves with `symbol` absent, exactly as before this change, since
+the bundled map has no confidently-derivable symbol for it yet (not a bug;
+see `mappings/token-map/README.md`). See `plugin/README.md`'s "Symbol
+resolution (token-map)" section for the full mechanics.
+
 ## Fixtures
 
 `schema/fixtures/*.json` are hand-written, schema-valid example IR

@@ -6,7 +6,8 @@
   "background": {
     "token": "color/surface/canvas/primary",
     "value": "#FFFFFF",
-    "modes": { "light": "#FFFFFF", "dark": "#000000" }
+    "modes": { "light": "#FFFFFF", "dark": "#000000" },
+    "symbol": "AppTheme.semanticColors.surface.canvas.primary"
   },
   "cornerRadius": null,
   "mainAxisAlign": "start",
@@ -20,7 +21,8 @@
       "color": {
         "token": "color/text/base/default",
         "value": "#1A1A1A",
-        "modes": { "light": "#1A1A1A", "dark": "#FFFFFF" }
+        "modes": { "light": "#1A1A1A", "dark": "#FFFFFF" },
+        "symbol": "AppTheme.semanticColors.text.base.default"
       },
       "source": {
         "nodeId": "12:342",

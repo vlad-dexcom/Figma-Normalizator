@@ -22,7 +22,8 @@
           "background": {
             "token": "color/surface/canvas/primary",
             "value": "#FFFFFF",
-            "modes": { "light": "#FFFFFF", "dark": "#000000" }
+            "modes": { "light": "#FFFFFF", "dark": "#000000" },
+            "symbol": "AppTheme.semanticColors.surface.canvas.primary"
           },
           "cornerRadius": { "token": null, "value": 12 },
           "children": [

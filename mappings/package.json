@@ -9,7 +9,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "generate:map": "node scripts/generate-map.mjs",
-    "generate:token-map": "node scripts/generate-token-map.mjs"
+    "generate:token-map": "node scripts/generate-token-map.mjs",
+    "bundle:token-map": "node scripts/bundle-token-map.mjs"
   },
   "dependencies": {
     "js-yaml": "^4.1.0"

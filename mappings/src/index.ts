@@ -4,12 +4,19 @@
 // component-map.yaml, pre-generated to JSON at build time — see
 // scripts/generate-map.mjs) plus the lookup helpers below, rather than
 // reading/parsing the YAML themselves.
+//
+// Consumers should likewise import `tokenMap` (the bundled Android_Avalon
+// token-map, trimmed and pre-generated to JSON at build time — see
+// scripts/bundle-token-map.mjs) plus `findTokenSymbol` below, rather than
+// reading mappings/token-map/*.token-map.json directly.
 import componentMapJson from "./generated/component-map.json" with { type: "json" };
+import tokenMapJson from "./generated/token-map.json" with { type: "json" };
 import type {
   ComponentMap,
   ComponentMapEntry,
   ComponentMapValueEntry,
   ComponentMapVariantGroup,
+  TokenMapBundleEntry,
 } from "./types.js";
 
 export * from "./types.js";
@@ -22,6 +29,44 @@ export function findComponentMapEntry(figmaComponentSetName: string): ComponentM
   return (
     componentMap.entries.find((entry) => entry.figmaComponentSet === figmaComponentSetName) ?? null
   );
+}
+
+/**
+ * The bundled token-map (Android_Avalon, see mappings/token-map/README.md
+ * and scripts/bundle-token-map-lib.mjs for why this product's map is the
+ * one bundled) — trimmed to just the entries with a confirmed symbol, and
+ * pre-generated to JSON at build time.
+ */
+export const tokenMap = tokenMapJson as unknown as TokenMapBundleEntry[];
+
+/**
+ * Path -> symbol index over `tokenMap`, built once (module-level, lazily on
+ * first lookup) and reused for every subsequent `findTokenSymbol` call —
+ * `tokenMap` has ~250 entries today and could grow along with the source
+ * token-map, so a per-call linear scan (`Array.prototype.find`, as
+ * `findComponentMapEntry` above does over ~a few hundred component-map
+ * entries) would needlessly cost O(n) per resolved token instead of O(1).
+ */
+let tokenSymbolIndex: Map<string, string> | undefined;
+
+function getTokenSymbolIndex(): Map<string, string> {
+  tokenSymbolIndex ??= new Map(tokenMap.map((entry) => [entry.path, entry.symbol]));
+  return tokenSymbolIndex;
+}
+
+/**
+ * Looks up a Figma variable path (the same string carried by
+ * `TokenValue.token`/`TokenRef.token`) against the bundled token-map.
+ * Returns the confirmed Kotlin design-system symbol, or `undefined` when
+ * the path has no entry in the bundled map, or has an entry whose `symbol`
+ * couldn't be confidently derived (dropped from the bundle — see
+ * `TokenMapBundleEntry`'s doc comment). Both cases are deliberately
+ * indistinguishable to callers: an absent symbol is the normal, expected
+ * state for most tokens today (see mappings/token-map/README.md), not a
+ * hygiene problem to warn about.
+ */
+export function findTokenSymbol(path: string): string | undefined {
+  return getTokenSymbolIndex().get(path);
 }
 
 /**
