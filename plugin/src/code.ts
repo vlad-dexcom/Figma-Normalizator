@@ -12,6 +12,7 @@ import {
   type ExtractionResult,
   type FigmaNode,
 } from "./extractor/index.js";
+import { findSymbolPath } from "./extractor/mixed.js";
 import type { PluginToUIMessage, SelectionSummary, UIToPluginMessage } from "./messages.js";
 
 /** The minimal slice of the real Figma plugin API this entry point depends on. */
@@ -82,6 +83,29 @@ async function handleExtract(api: ExtractFigmaAPI): Promise<void> {
       selection,
       { fileKey: api.fileKey ?? "" },
     );
+
+    // Defense-in-depth: even with every currently-known read site guarded
+    // against `figma.mixed` (see extractor/mixed.ts's `isMixed`), a
+    // still-unguarded read of some other mixed-capable Figma API surface
+    // (present or future) could let a stray `Symbol` slip into `result`.
+    // `figma.ui.postMessage` uses structured clone, which cannot serialize
+    // a `Symbol` and would otherwise crash the panel with the opaque
+    // "Cannot unwrap symbol" error this whole fix exists to prevent. Scan
+    // the full result tree first so any such leak surfaces as a clear,
+    // actionable diagnostic (naming exactly which property leaked) instead
+    // of an uncaught structured-clone failure.
+    const symbolPath = findSymbolPath(result);
+    if (symbolPath) {
+      api.ui.postMessage({
+        type: "error",
+        message:
+          `Extraction produced an unserializable value (a Symbol, likely an unguarded ` +
+          `figma.mixed read) at path "${symbolPath.join(".")}" in the result. This is a ` +
+          "plugin bug — please report it, including the node/property that produced this path.",
+        code: "symbol-leak",
+      });
+      return;
+    }
 
     api.ui.postMessage({
       type: "ir-result",

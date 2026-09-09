@@ -144,6 +144,15 @@ describe("resolveFillColor", () => {
     );
     expect(result.token).toBeNull();
   });
+
+  it("emits token:null plus a mixed-value UnresolvedEntry when fills is the figma.mixed sentinel", async () => {
+    const figma = mockFigmaAPI({}, {});
+    const result = await resolveFillColor(figma, "1:1", Symbol("figma.mixed"), undefined);
+    expect(result.token).toBeNull();
+    expect(result.unresolved).toEqual([
+      { nodeId: "1:1", reason: "mixed-value", detail: expect.stringContaining("fills") },
+    ]);
+  });
 });
 
 describe("resolveTypographyToken", () => {

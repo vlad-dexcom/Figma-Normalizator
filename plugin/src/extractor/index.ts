@@ -9,7 +9,13 @@
 // hints (concern #8) — the current IR schema has no channel for "inferred
 // hint, never authoritative" metadata, and inventing one wasn't in scope
 // for this task.
-import type { IRNode, LayoutNode, Padding, UnresolvedEntry } from "@figma-normalizator/schema";
+import type {
+  IRNode,
+  LayoutNode,
+  Padding,
+  TokenValue,
+  UnresolvedEntry,
+} from "@figma-normalizator/schema";
 import { DEFAULT_NODE_BUDGET, NodeBudget } from "./budget.js";
 import { isAssetNode, buildAssetNode } from "./asset.js";
 import { buildInstanceNode } from "./instance.js";
@@ -22,11 +28,12 @@ import {
   buildPaddingRaw,
   isUniformPadding,
 } from "./layout.js";
-import { resolveFillColor, resolveTokenValue } from "./tokens.js";
+import { resolveFillColor, resolveTokenValue, mixedValueResult } from "./tokens.js";
 import { buildProvenance, withDescendant, type ProvenanceContext } from "./provenance.js";
 import { collapseLists, type OrderedChild } from "./list.js";
 import { groupOverlayChildren } from "./overlay.js";
 import { computeContentVersion, withVersion } from "./versioning.js";
+import { isMixed } from "./mixed.js";
 import type { ExtractionSource, FigmaAPI, FigmaNode } from "./types.js";
 
 export { DEFAULT_NODE_BUDGET, NodeBudgetExceededError } from "./budget.js";
@@ -143,8 +150,12 @@ async function buildLayoutNode(
   const background = await resolveFillColor(figma, node.id, node.fills, node.boundVariables);
   unresolved.push(...background.unresolved);
 
-  const cornerRadius =
-    node.cornerRadius !== undefined
+  const cornerRadius = isMixed(node.cornerRadius)
+    ? mixedValueResult<TokenValue>(
+        node.id,
+        "This node has independent per-corner radii (top-left/top-right/bottom-left/bottom-right differ) and cannot be represented as a single token; consider using a uniform radius or documenting the intended per-corner values separately.",
+      )
+    : node.cornerRadius !== undefined
       ? await resolveTokenValue(
           figma,
           node.id,

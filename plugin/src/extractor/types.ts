@@ -98,15 +98,26 @@ export interface FigmaNode {
   readonly paddingRight?: number;
   readonly paddingTop?: number;
   readonly paddingBottom?: number;
-  readonly cornerRadius?: number;
+  // `CornerMixin.cornerRadius` in the real Plugin API: `number |
+  // PluginAPI["mixed"]` — a rectangle/frame with independent per-corner
+  // radii (top-left/top-right/bottom-left/bottom-right differ) returns the
+  // `figma.mixed` sentinel (a `Symbol`) instead of a plain number. See
+  // `./mixed.ts`'s `isMixed` guard, used at every read site.
+  readonly cornerRadius?: number | symbol;
 
   // Auto Layout (child level — how this node participates in its parent).
   readonly layoutGrow?: number;
   readonly layoutAlign?: "MIN" | "CENTER" | "MAX" | "STRETCH" | "INHERIT";
   readonly layoutPositioning?: "AUTO" | "ABSOLUTE";
 
-  // Fills/strokes (color resolution).
-  readonly fills?: readonly FigmaPaint[];
+  // Fills/strokes (color resolution). `MinimalFillsMixin.fills` in the real
+  // Plugin API is `ReadonlyArray<Paint> | PluginAPI["mixed"]` — a node with
+  // multiple sets of fills (e.g. per-character text fills observed at the
+  // node level rather than per-segment) returns the `figma.mixed` sentinel
+  // (a `Symbol`) instead of an array. Guarded via `isMixed` in
+  // `resolveFillColor` (tokens.ts), the single choke point every raw
+  // `fills` read goes through.
+  readonly fills?: readonly FigmaPaint[] | symbol;
 
   // Bound variables (token resolution). See VariableBindableNodeField.
   readonly boundVariables?: Record<
