@@ -76,3 +76,27 @@ export function mockInstance(
     ...rest,
   });
 }
+
+/**
+ * Builds an INSTANCE mock whose `componentProperties` access throws, to
+ * simulate Figma's real Plugin API behavior when the underlying component
+ * set has broken/conflicting variant definitions (see
+ * `safeReadComponentProperties` in `../extractor/instance.ts`). Uses
+ * `Object.defineProperty` with a throwing getter rather than a plain
+ * value, since a real throwing accessor — not a value the extractor could
+ * simply check for — is exactly what this simulates.
+ */
+export function mockInstanceWithUnreadableComponentProperties(
+  overrides: Partial<FigmaNode> & { name: string; mainComponent: FigmaNode | null },
+  errorMessage = "Component set for node has existing errors",
+): FigmaNode {
+  const node = mockInstance({ ...overrides, componentProperties: undefined });
+  Object.defineProperty(node, "componentProperties", {
+    get(): never {
+      throw new Error(errorMessage);
+    },
+    enumerable: true,
+    configurable: true,
+  });
+  return node;
+}

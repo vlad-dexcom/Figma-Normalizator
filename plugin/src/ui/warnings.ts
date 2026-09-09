@@ -23,6 +23,12 @@ import type { UnresolvedEntry } from "@figma-normalizator/schema";
  *    API-level signal to "detached instance" that Figma's plugin API
  *    actually exposes; a true detached instance has no distinguishing
  *    signal at all (its type becomes plain FRAME) — see README/PR notes.
+ *  - "unreadable-component-properties": extractor (instance.ts, also
+ *    guarded in list.ts) — `node.componentProperties` is a Figma Plugin
+ *    API getter that can throw when the underlying component set has
+ *    broken/conflicting variant definitions in the Figma file itself.
+ *    This is a data-integrity issue in the file, not a plugin bug — fix
+ *    it in Figma (Assets panel → repair/republish the component set).
  *  - "absolute-positioning": extractor (overlay.ts) — children collapsed
  *    into an `overlay` node (absolutely positioned inside an Auto Layout
  *    parent). Structurally handled either way; this entry exists purely so
@@ -33,6 +39,7 @@ const REASON_LABELS: Record<string, string> = {
   "unmapped-variant": "Unmapped variant",
   "unmapped-component": "Unmapped component",
   "missing-main-component": "Missing main component",
+  "unreadable-component-properties": "Unreadable component properties",
   "absolute-positioning": "Absolute positioning inside Auto Layout",
 };
 

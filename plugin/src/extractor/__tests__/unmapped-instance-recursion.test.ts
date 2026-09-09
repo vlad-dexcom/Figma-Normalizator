@@ -12,6 +12,7 @@ import {
   mockComponent,
   mockComponentSet,
   mockInstance,
+  mockInstanceWithUnreadableComponentProperties,
   mockText,
 } from "../../test/nodeBuilders.js";
 import type { FigmaAPI } from "../types.js";
@@ -114,5 +115,74 @@ describe("unmapped instance recursion", () => {
     expect(root).not.toHaveProperty("children");
     expect(root).toMatchObject({ kind: "instance", component: "AppButton" });
     expect(result.unresolved).toEqual([]);
+  });
+
+  it("recurses past an instance whose componentProperties getter throws, still extracting real sibling/child content", async () => {
+    // Real-world report: a component set with broken/conflicting variant
+    // definitions in the Figma file itself makes `componentProperties`
+    // throw synchronously. This must not abort extraction of the whole
+    // selection — the broken instance falls back to the container path
+    // (like any other unmapped instance) and its siblings/children still
+    // extract normally, with a clear warning for the broken node alone.
+    const brokenSet = mockComponentSet({ name: "Broken Set" });
+    const brokenMain = mockComponent({ name: "Default", parent: brokenSet });
+    const brokenInstance = mockInstanceWithUnreadableComponentProperties({
+      name: "Broken Set",
+      mainComponent: brokenMain,
+    });
+
+    const labelText = mockText("Sibling label", [
+      {
+        characters: "Sibling label",
+        fontSize: 14,
+        fontName: { family: "Inter", style: "Regular" },
+        fills: [],
+      },
+    ]);
+
+    const buttonsSet = mockComponentSet({ name: "Buttons" });
+    const buttonsMain = mockComponent({ name: "Style=Primary, Size=Large", parent: buttonsSet });
+    const nestedButton = mockInstance({
+      name: "Buttons",
+      mainComponent: buttonsMain,
+      componentProperties: {
+        Style: { type: "VARIANT", value: "Primary" },
+        Size: { type: "VARIANT", value: "Large" },
+      },
+    });
+
+    const rootFrame = mockComponent({ name: "Screen" });
+    const wrapper = mockInstance({
+      name: "Wrapper",
+      mainComponent: rootFrame,
+      layoutMode: "VERTICAL",
+      itemSpacing: 8,
+      children: [brokenInstance, labelText, nestedButton],
+    });
+
+    const result = await extractSelection(noopFigmaAPI, [wrapper], {
+      fileKey: "fk",
+      version: "1",
+    });
+
+    // The extraction must not throw and must not abort at the broken
+    // instance: it falls back to container-handling with no descended
+    // children of its own, while its siblings still extract normally.
+    const root = result.nodes[0] as LayoutNode;
+    expect(root.kind).toBe("layout");
+    expect(root.children.map((child) => child.kind)).toEqual(["text", "instance"]);
+    expect(root.children[1]).toMatchObject({
+      kind: "instance",
+      component: "AppButton",
+    } satisfies Partial<IRInstanceNode>);
+
+    // A clear, actionable warning for the specific broken node is
+    // preserved in the flattened result.
+    expect(result.unresolved).toContainEqual(
+      expect.objectContaining({
+        nodeId: brokenInstance.id,
+        reason: "unreadable-component-properties",
+      }),
+    );
   });
 });

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { buildInstanceNode } from "../instance.js";
-import { mockComponent, mockComponentSet, mockInstance } from "../../test/nodeBuilders.js";
+import {
+  mockComponent,
+  mockComponentSet,
+  mockInstance,
+  mockInstanceWithUnreadableComponentProperties,
+} from "../../test/nodeBuilders.js";
 
 const ctx = { fileKey: "fk", version: "1", ancestorPath: [] };
 
@@ -119,6 +124,32 @@ describe("buildInstanceNode", () => {
     expect(result.unresolved).toContainEqual(
       expect.objectContaining({ nodeId: node.id, reason: "missing-main-component" }),
     );
+  });
+
+  it("treats a throwing componentProperties getter as unmapped with reason unreadable-component-properties", async () => {
+    // Simulates the real-world report: Figma's plugin API throws
+    // synchronously reading `componentProperties` when the instance's
+    // component set has broken/conflicting variant definitions in the
+    // file itself. This must not throw out of buildInstanceNode — it
+    // should fall back to `unmapped` (same as any other unmapped
+    // instance) so the caller recurses into real children instead of
+    // discarding the whole subtree.
+    const componentSet = mockComponentSet({ name: "Buttons" });
+    const main = mockComponent({ name: "Style=Primary, Size=Large", parent: componentSet });
+    const node = mockInstanceWithUnreadableComponentProperties(
+      { name: "Buttons", mainComponent: main },
+      "Component set for node has existing errors",
+    );
+
+    const result = await buildInstanceNode(node, undefined, ctx);
+    expect(result.kind).toBe("unmapped");
+    expect(result.unresolved).toEqual([
+      expect.objectContaining({
+        nodeId: node.id,
+        reason: "unreadable-component-properties",
+        detail: expect.stringContaining("Component set for node has existing errors"),
+      }),
+    ]);
   });
 
   it("resolves Switch's state-based checked prop", async () => {
