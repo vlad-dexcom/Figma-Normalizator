@@ -5,10 +5,29 @@
 // variable. See concern #3 in the plugin-extractor task description.
 import type { TokenValue, TokenRef, UnresolvedEntry } from "@figma-normalizator/schema";
 import type { FigmaAPI, FigmaPaint, VariableAliasBinding } from "./types.js";
+import { isMixed } from "./mixed.js";
 
 export interface TokenResolutionResult<T> {
   token: T;
   unresolved: UnresolvedEntry[];
+}
+
+/**
+ * Builds the `{ token: null }` + `UnresolvedEntry` shape for a raw Figma
+ * value that turned out to be the `figma.mixed` sentinel (see `./mixed.ts`)
+ * rather than a scalar — mirroring `resolveTokenValue`'s own `{ token:
+ * null, ... }` shape for an unbound literal, but with a distinct
+ * `"mixed-value"` reason: this is a value that genuinely has no single
+ * representation, not one that merely lacks a bound variable.
+ */
+export function mixedValueResult<T>(
+  nodeId: string,
+  detail: string,
+): TokenResolutionResult<T | null> {
+  return {
+    token: null,
+    unresolved: [{ nodeId, reason: "mixed-value", detail }],
+  };
 }
 
 function toHex(component: number): string {
@@ -148,10 +167,20 @@ export async function resolveTokenValue(
 export async function resolveFillColor(
   figma: FigmaAPI,
   nodeId: string,
-  fills: readonly FigmaPaint[] | undefined,
+  fills: readonly FigmaPaint[] | symbol | undefined,
   boundVariables:
     Record<string, VariableAliasBinding | VariableAliasBinding[] | undefined> | undefined,
 ): Promise<TokenResolutionResult<TokenValue | null>> {
+  if (isMixed(fills)) {
+    // The node has multiple sets of fills (e.g. per-character text fills
+    // observed at the node level) — there is no single fill color to
+    // resolve, so surface a clear warning rather than passing a `Symbol`
+    // into `colorToHex`/onward toward `postMessage`.
+    return mixedValueResult(
+      nodeId,
+      'Field "fills" is mixed (this node has multiple sets of fills) and cannot be represented as a single color; consider using a uniform fill or documenting the intended per-fill values separately.',
+    );
+  }
   const paint = (fills ?? []).find((f) => f.type === "SOLID" && f.visible !== false);
   if (!paint || !paint.color) {
     return { token: null, unresolved: [] };

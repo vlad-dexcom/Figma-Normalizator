@@ -22,7 +22,12 @@ export interface ExportSource {
 
 /** A stable, machine-readable reason an operation requested by the UI didn't succeed. */
 export type PluginErrorCode =
-  "empty-selection" | "budget-exceeded" | "node-not-found" | "unsupported" | "unknown";
+  | "empty-selection"
+  | "budget-exceeded"
+  | "node-not-found"
+  | "unsupported"
+  | "unknown"
+  | "symbol-leak";
 
 /** Messages the plugin sandbox (`code.ts`) posts to the UI iframe (`ui.ts`). */
 export type PluginToUIMessage =

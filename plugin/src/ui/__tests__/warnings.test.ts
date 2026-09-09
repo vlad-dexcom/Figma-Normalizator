@@ -10,6 +10,7 @@ describe("labelForReason", () => {
     expect(labelForReason("unreadable-component-properties")).toBe(
       "Unreadable component properties",
     );
+    expect(labelForReason("mixed-value")).toBe("Mixed value");
     expect(labelForReason("absolute-positioning")).toBe("Absolute positioning inside Auto Layout");
   });
 

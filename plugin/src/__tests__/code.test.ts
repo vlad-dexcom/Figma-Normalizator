@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { handleUIMessage, initializePlugin } from "../code.js";
 import { createMockFigma } from "../test/mockFigma.js";
 import { mockFrame, mockText } from "../test/nodeBuilders.js";
@@ -122,6 +122,51 @@ describe("handleUIMessage: extract", () => {
     expect(mockFigma.ui.postMessage).toHaveBeenCalledWith(
       expect.objectContaining({ type: "error", code: "budget-exceeded" }),
     );
+  });
+
+  it("posts a clear symbol-leak diagnostic instead of an opaque structured-clone crash when a stray Symbol reaches the result", async () => {
+    // Simulates a still-unguarded read site (present or future) letting a
+    // `figma.mixed`-style Symbol slip past every currently-known `isMixed`
+    // guard, all the way into the extraction result — the defense-in-depth
+    // safety net (`findSymbolPath`, invoked here inside `handleExtract`)
+    // must catch it before `postMessage` would otherwise crash with the
+    // real browser's opaque "Cannot unwrap symbol" structured-clone error.
+    const extractorModule = await import("../extractor/index.js");
+    const spy = vi.spyOn(extractorModule, "extractSelection").mockResolvedValue({
+      nodes: [
+        {
+          kind: "layout",
+          direction: "column",
+          gap: null,
+          padding: {},
+          mainAxisAlign: "start",
+          crossAxisAlign: "start",
+          sizing: { width: "fixed", height: "fixed" },
+          background: null,
+          // A stray, unguarded Symbol nested inside the result tree.
+          cornerRadius: Symbol("figma.mixed") as never,
+          children: [],
+          source: { fileKey: "fk", nodeId: "1:1", version: "1", path: [] },
+        },
+      ],
+      unresolved: [],
+      version: "1",
+    });
+
+    const selected = mockFrame({ name: "Screen", children: [] });
+    const mockFigma = createMockFigma({ selection: [selected] });
+
+    await handleUIMessage(mockFigma, { type: "extract" });
+
+    expect(mockFigma.ui.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "error",
+        code: "symbol-leak",
+        message: expect.stringContaining("nodes.0.cornerRadius"),
+      }),
+    );
+
+    spy.mockRestore();
   });
 });
 

@@ -29,6 +29,11 @@ import type { UnresolvedEntry } from "@figma-normalizator/schema";
  *    broken/conflicting variant definitions in the Figma file itself.
  *    This is a data-integrity issue in the file, not a plugin bug — fix
  *    it in Figma (Assets panel → repair/republish the component set).
+ *  - "mixed-value": extractor (tokens.ts/index.ts) — a property genuinely
+ *    varies internally within the node (Figma's `figma.mixed` sentinel),
+ *    e.g. independent per-corner radii, and so cannot be represented as a
+ *    single token/value. Also a Figma-file-side authoring choice to
+ *    reconsider, not a plugin bug.
  *  - "absolute-positioning": extractor (overlay.ts) — children collapsed
  *    into an `overlay` node (absolutely positioned inside an Auto Layout
  *    parent). Structurally handled either way; this entry exists purely so
@@ -40,6 +45,7 @@ const REASON_LABELS: Record<string, string> = {
   "unmapped-component": "Unmapped component",
   "missing-main-component": "Missing main component",
   "unreadable-component-properties": "Unreadable component properties",
+  "mixed-value": "Mixed value",
   "absolute-positioning": "Absolute positioning inside Auto Layout",
 };
 
